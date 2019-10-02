@@ -107,9 +107,9 @@ class NSProfileFragment : Fragment() {
                 }
             }
         }
-        updateGUI()
     }
 
+    @Synchronized
     override fun onResume() {
         super.onResume()
         disposable.add(RxBus
@@ -121,14 +121,18 @@ class NSProfileFragment : Fragment() {
                     FabricPrivacy.logException(it)
                 })
         )
+        updateGUI()
     }
 
+    @Synchronized
     override fun onPause() {
         super.onPause()
         disposable.clear()
     }
 
+    @Synchronized
     fun updateGUI() {
+        if (profileview_noprofile == null) return
         profileview_noprofile.visibility = View.VISIBLE
 
         NSProfilePlugin.getPlugin().profile?.let { profileStore ->

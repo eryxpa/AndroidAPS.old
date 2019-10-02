@@ -5,12 +5,12 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+
+import androidx.fragment.app.FragmentManager;
 
 import com.squareup.otto.Subscribe;
 
@@ -45,12 +45,9 @@ import info.nightscout.androidaps.plugins.general.careportal.OptionsToShow;
 import info.nightscout.androidaps.plugins.treatments.TreatmentsPlugin;
 import info.nightscout.androidaps.utils.FabricPrivacy;
 import info.nightscout.androidaps.utils.PasswordProtection;
+import info.nightscout.androidaps.utils.SP;
 import info.nightscout.androidaps.utils.SingleClickButton;
 
-
-/**
- * A simple {@link Fragment} subclass.
- */
 public class ActionsFragment extends SubscriberFragment implements View.OnClickListener {
 
     static ActionsPlugin actionsPlugin = new ActionsPlugin();
@@ -59,16 +56,16 @@ public class ActionsFragment extends SubscriberFragment implements View.OnClickL
         return actionsPlugin;
     }
 
-    View actionsFragmentView;
-    SingleClickButton profileSwitch;
-    SingleClickButton tempTarget;
-    SingleClickButton extendedBolus;
-    SingleClickButton extendedBolusCancel;
-    SingleClickButton tempBasal;
-    SingleClickButton tempBasalCancel;
-    SingleClickButton fill;
-    SingleClickButton tddStats;
-    SingleClickButton history;
+    private View actionsFragmentView;
+    private SingleClickButton profileSwitch;
+    private SingleClickButton tempTarget;
+    private SingleClickButton extendedBolus;
+    private SingleClickButton extendedBolusCancel;
+    private SingleClickButton tempBasal;
+    private SingleClickButton tempBasalCancel;
+    private SingleClickButton fill;
+    private SingleClickButton tddStats;
+    private SingleClickButton history;
 
     private Map<String, CustomAction> pumpCustomActions = new HashMap<>();
     private List<SingleClickButton> pumpCustomButtons = new ArrayList<>();
@@ -84,29 +81,30 @@ public class ActionsFragment extends SubscriberFragment implements View.OnClickL
         try {
             View view = inflater.inflate(R.layout.actions_fragment, container, false);
 
-            profileSwitch = (SingleClickButton) view.findViewById(R.id.actions_profileswitch);
-            tempTarget = (SingleClickButton) view.findViewById(R.id.actions_temptarget);
-            extendedBolus = (SingleClickButton) view.findViewById(R.id.actions_extendedbolus);
-            extendedBolusCancel = (SingleClickButton) view.findViewById(R.id.actions_extendedbolus_cancel);
-            tempBasal = (SingleClickButton) view.findViewById(R.id.actions_settempbasal);
-            tempBasalCancel = (SingleClickButton) view.findViewById(R.id.actions_canceltempbasal);
-            fill = (SingleClickButton) view.findViewById(R.id.actions_fill);
+            profileSwitch = view.findViewById(R.id.actions_profileswitch);
+            tempTarget = view.findViewById(R.id.actions_temptarget);
+            extendedBolus = view.findViewById(R.id.actions_extendedbolus);
+            extendedBolusCancel = view.findViewById(R.id.actions_extendedbolus_cancel);
+            tempBasal = view.findViewById(R.id.actions_settempbasal);
+            tempBasalCancel = view.findViewById(R.id.actions_canceltempbasal);
+            fill = view.findViewById(R.id.actions_fill);
             tddStats = view.findViewById(R.id.actions_tddstats);
             history = view.findViewById(R.id.actions_historybrowser);
 
-            profileSwitch.setOnClickListener(this);
-            tempTarget.setOnClickListener(this);
-            extendedBolus.setOnClickListener(this);
-            extendedBolusCancel.setOnClickListener(this);
-            tempBasal.setOnClickListener(this);
-            tempBasalCancel.setOnClickListener(this);
-            fill.setOnClickListener(this);
-            history.setOnClickListener(this);
-            tddStats.setOnClickListener(this);
+        profileSwitch.setOnClickListener(this);
+        tempTarget.setOnClickListener(this);
+        extendedBolus.setOnClickListener(this);
+        extendedBolusCancel.setOnClickListener(this);
+        tempBasal.setOnClickListener(this);
+        tempBasalCancel.setOnClickListener(this);
+        fill.setOnClickListener(this);
+        history.setOnClickListener(this);
+        tddStats.setOnClickListener(this);
 
-            actionsFragmentView = view;
+        actionsFragmentView = view;
 
             updateGUI();
+            SP.putBoolean(R.string.key_objectiveuseactions, true);
             return view;
         } catch (Exception e) {
             FabricPrivacy.logException(e);
