@@ -1,5 +1,6 @@
 package info.nightscout.androidaps.plugins.aps.loop;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -8,17 +9,29 @@ import android.app.PendingIntent;
 import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
+import android.os.Environment;
 import android.os.SystemClock;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 
 import com.squareup.otto.Subscribe;
 
+import org.jcw.JCUtil;
+import org.jcw.NotifyByTelegramTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.Date;
 
 import info.nightscout.androidaps.Constants;
@@ -59,6 +72,7 @@ import info.nightscout.androidaps.plugins.pump.virtual.VirtualPumpPlugin;
 import info.nightscout.androidaps.plugins.treatments.TreatmentsPlugin;
 import info.nightscout.androidaps.queue.Callback;
 import info.nightscout.androidaps.queue.commands.Command;
+import info.nightscout.androidaps.utils.DateUtil;
 import info.nightscout.androidaps.utils.FabricPrivacy;
 import info.nightscout.androidaps.utils.SP;
 import info.nightscout.androidaps.utils.T;
@@ -120,6 +134,7 @@ public class LoopPlugin extends PluginBase {
         MainApp.bus().register(this);
         createNotificationChannel();
         super.onStart();
+        JCUtil.sendTelegramNotification("ACTIVADO lazo cerrado. LOOP ENABLE.");
     }
 
     private void createNotificationChannel() {
@@ -138,6 +153,7 @@ public class LoopPlugin extends PluginBase {
     protected void onStop() {
         super.onStop();
         MainApp.bus().unregister(this);
+        JCUtil.sendTelegramNotification("PARADO lazo cerrado. LOOP DISABLE.");
     }
 
     @Override
@@ -416,7 +432,8 @@ public class LoopPlugin extends PluginBase {
                             .setAutoCancel(true)
                             .setPriority(Notification.PRIORITY_HIGH)
                             .setCategory(Notification.CATEGORY_ALARM)
-                            .setVisibility(Notification.VISIBILITY_PUBLIC);
+                            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+                            //.setVisibility(Notification.VISIBILITY_PUBLIC);
                     if (SP.getBoolean("wearcontrol", false)) {
                         builder.setLocalOnly(true);
                     }
@@ -490,6 +507,12 @@ public class LoopPlugin extends PluginBase {
 
     public void applyTBRRequest(APSResult request, Profile profile, Callback callback) {
         boolean allowPercentage = VirtualPumpPlugin.getPlugin().isEnabled(PluginType.PUMP);
+
+        Log.i("JCW", "adaptación JCW. Inicio de applyTBRRequest");
+
+        //informar de basal temporal que se desea aplicar. Aquí aún no sabemos si se aplicará correctamente
+        JCUtil.notifyTBR(request);
+
 
         if (!request.tempBasalRequested) {
             if (callback != null) {
@@ -574,6 +597,10 @@ public class LoopPlugin extends PluginBase {
                     && Math.abs(request.rate - activeTemp.tempBasalConvertedToAbsolute(now, profile)) < pump.getPumpDescription().basalStep) {
                 if (L.isEnabled(L.APS))
                     log.debug("applyAPSRequest: Temp basal set correctly");
+
+                //informar de basal temporal establecida
+                //writeToFileTempBasals(request);
+
                 if (callback != null) {
                     callback.result(new PumpEnactResult().absolute(activeTemp.tempBasalConvertedToAbsolute(now, profile))
                             .enacted(false).success(true).duration(activeTemp.getPlannedRemainingMinutes())
@@ -586,6 +613,7 @@ public class LoopPlugin extends PluginBase {
             }
         }
     }
+
 
     public void applySMBRequest(APSResult request, Callback callback) {
         if (!request.bolusRequested) {

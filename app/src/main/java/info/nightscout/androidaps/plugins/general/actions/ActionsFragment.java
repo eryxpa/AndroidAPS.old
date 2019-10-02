@@ -44,6 +44,7 @@ import info.nightscout.androidaps.plugins.general.careportal.Dialogs.NewNSTreatm
 import info.nightscout.androidaps.plugins.general.careportal.OptionsToShow;
 import info.nightscout.androidaps.plugins.treatments.TreatmentsPlugin;
 import info.nightscout.androidaps.utils.FabricPrivacy;
+import info.nightscout.androidaps.utils.PasswordProtection;
 import info.nightscout.androidaps.utils.SingleClickButton;
 
 
@@ -298,11 +299,20 @@ public class ActionsFragment extends SubscriberFragment implements View.OnClickL
         FragmentManager manager = getFragmentManager();
         switch (view.getId()) {
             case R.id.actions_profileswitch:
-                NewNSTreatmentDialog newDialog = new NewNSTreatmentDialog();
-                final OptionsToShow profileswitch = CareportalFragment.PROFILESWITCH;
-                profileswitch.executeProfileSwitch = true;
-                newDialog.setOptions(profileswitch, R.string.careportal_profileswitch);
-                newDialog.show(manager, "NewNSTreatmentDialog");
+//                NewNSTreatmentDialog newDialog = new NewNSTreatmentDialog();
+//                final OptionsToShow profileswitch = CareportalFragment.PROFILESWITCH;
+//                profileswitch.executeProfileSwitch = true;
+//                newDialog.setOptions(profileswitch, R.string.careportal_profileswitch);
+//                newDialog.show(manager, "NewNSTreatmentDialog");
+
+                PasswordProtection.QueryPassword(getActivity(), R.string.settings_password, "settings_password", () -> {
+                    NewNSTreatmentDialog newDialog = new NewNSTreatmentDialog();
+                    final OptionsToShow profileswitch = CareportalFragment.PROFILESWITCH;
+                    profileswitch.executeProfileSwitch = true;
+                    newDialog.setOptions(profileswitch, R.string.careportal_profileswitch);
+                    newDialog.show(manager, "NewNSTreatmentDialog");
+                }, null);
+
                 break;
             case R.id.actions_temptarget:
                 NewNSTreatmentDialog newTTDialog = new NewNSTreatmentDialog();
@@ -312,8 +322,14 @@ public class ActionsFragment extends SubscriberFragment implements View.OnClickL
                 newTTDialog.show(manager, "NewNSTreatmentDialog");
                 break;
             case R.id.actions_extendedbolus:
-                NewExtendedBolusDialog newExtendedDialog = new NewExtendedBolusDialog();
-                newExtendedDialog.show(manager, "NewExtendedDialog");
+                //NewExtendedBolusDialog newExtendedDialog = new NewExtendedBolusDialog();
+                //newExtendedDialog.show(manager, "NewExtendedDialog");
+
+                PasswordProtection.QueryPassword(getActivity(), R.string.settings_password, "settings_password", () -> {
+                    NewExtendedBolusDialog newExtendedDialog = new NewExtendedBolusDialog();
+                    newExtendedDialog.show(manager, "NewExtendedDialog");
+                }, null);
+
                 break;
             case R.id.actions_extendedbolus_cancel:
                 if (TreatmentsPlugin.getPlugin().isInHistoryExtendedBoluslInProgress()) {
@@ -326,12 +342,24 @@ public class ActionsFragment extends SubscriberFragment implements View.OnClickL
                 }
                 break;
             case R.id.actions_settempbasal:
-                NewTempBasalDialog newTempDialog = new NewTempBasalDialog();
-                newTempDialog.show(manager, "NewTempDialog");
+                //NewTempBasalDialog newTempDialog = new NewTempBasalDialog();
+                //newTempDialog.show(manager, "NewTempDialog");
+
+                PasswordProtection.QueryPassword(getActivity(), R.string.settings_password, "settings_password", () -> {
+                    NewTempBasalDialog newTempDialog = new NewTempBasalDialog();
+                    newTempDialog.show(manager, "NewTempDialog");
+                }, null);
+
                 break;
             case R.id.actions_fill:
-                FillDialog fillDialog = new FillDialog();
-                fillDialog.show(manager, "FillDialog");
+                //FillDialog fillDialog = new FillDialog();
+                //fillDialog.show(manager, "FillDialog");
+
+                PasswordProtection.QueryPassword(getActivity(), R.string.settings_password, "settings_password", () -> {
+                    FillDialog fillDialog = new FillDialog();
+                    fillDialog.show(manager, "FillDialog");
+                }, null);
+
                 break;
             case R.id.actions_historybrowser:
                 startActivity(new Intent(getContext(), HistoryBrowseActivity.class));

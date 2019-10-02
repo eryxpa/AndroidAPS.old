@@ -23,6 +23,7 @@ import com.squareup.otto.ThreadEnforcer;
 
 import net.danlew.android.joda.JodaTimeAndroid;
 
+import org.jcw.JCUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -454,6 +455,7 @@ public class MainApp extends Application {
         if (timeDateOrTZChangeReceiver!=null) {
             unregisterReceiver(timeDateOrTZChangeReceiver);
         }
+        JCUtil.sendTelegramNotification("Apagando AndroidAPS");
 
     }
 

@@ -9,12 +9,14 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.SystemClock;
+import android.widget.Toast;
 
 import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
 import com.j256.ormlite.dao.CloseableIterator;
 import com.squareup.otto.Subscribe;
 
+import org.jcw.JCUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -358,6 +360,8 @@ public class NSClientService extends Service {
         nsURL = SP.getString(R.string.key_nsclientinternal_url, "");
         nsAPISecret = SP.getString(R.string.key_nsclientinternal_api_secret, "");
         nsDevice = SP.getString("careportal_enteredby", "");
+        //JCUtil.setTelegramURL(SP.getString(R.string.key_telegram_group_url, ""));
+        //Toast.makeText(this, "Telegram URL:  "+SP.getString(R.string.key_telegram_group_url, ""), Toast.LENGTH_LONG);
     }
 
     private Emitter.Listener onPing = new Emitter.Listener() {

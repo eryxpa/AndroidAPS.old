@@ -1,5 +1,6 @@
 package info.nightscout.androidaps.queue.commands;
 
+import org.jcw.JCUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +43,13 @@ public class CommandSetProfile extends Command {
         }
 
         PumpEnactResult r = ConfigBuilderPlugin.getPlugin().getActivePump().setNewBasalProfile(profile);
+
+        //PRINCIPIO adaptación para informar desde aquí de las basales temporales, porque aquí sabemos si se ha hecho efectiva (enacted) o no
+        String command = "CommandSetProfile.execute";
+        //JCUtil.infoTempTelegram(command, r, -999, -999);
+        JCUtil.infoProfileSetTelegram(profile, r, command);
+        //FIN adaptación para informar desde aquí de las basales temporales, porque aquí sabemos si se ha hecho efectiva (enacted) o no
+
         if (L.isEnabled(L.PUMPQUEUE))
             log.debug("Result success: " + r.success + " enacted: " + r.enacted + " profile: " + profile.toString());
         if (callback != null)

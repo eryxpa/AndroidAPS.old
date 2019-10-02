@@ -30,6 +30,9 @@ public class CommandBolus extends Command {
 
     @Override
     public void execute() {
+
+        //FIXME: JCW. Aquí puedo decidir, quizá por Preferences, si permito bolos, smb o nada. Se puede devolver algo así r = new PumpEnactResult().enacted(false).success(false).comment("SMB requsted but still in 3 min interval"); y mostrar un Toast y/o enviar telegram/SMS
+
         PumpEnactResult r = ConfigBuilderPlugin.getPlugin().getActivePump().deliverTreatment(detailedBolusInfo);
 
         BolusProgressDialog.bolusEnded = true;

@@ -8,6 +8,7 @@ import android.telephony.SmsMessage;
 import com.squareup.otto.Subscribe;
 
 import org.apache.commons.lang3.StringUtils;
+import org.jcw.JCUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -757,12 +758,27 @@ public class SmsCommunicatorPlugin extends PluginBase {
         try {
             if (L.isEnabled(L.SMS))
                 log.debug("Sending SMS to " + sms.phoneNumber + ": " + sms.text);
-            if (sms.text.getBytes().length <= 140)
-                smsManager.sendTextMessage(sms.phoneNumber, null, sms.text, null, null);
+
+            //FIXME: puestos a fuego los teléfonos (parte). Configurar en preferences?
+            if (sms.phoneNumber != null && sms.phoneNumber.contains("40894"))
+            {
+                //smsManager.sendTextMessage(sms.phoneNumber, null, sms.text, null, null);
+                log.info("JCW. Mandamos telegram: SMS to " + sms.phoneNumber + ": " + sms.text);
+                JCUtil.sendTelegramNotification("AAPS: SMS to " + sms.phoneNumber + ": " + sms.text);
+            }
             else {
-                ArrayList<String> parts = smsManager.divideMessage(sms.text);
-                smsManager.sendMultipartTextMessage(sms.phoneNumber, null, parts,
-                        null, null);
+                log.info("JCW. No usamos telegram: SMS to " + sms.phoneNumber + ": " + sms.text);
+
+
+                if (sms.text.getBytes().length <= 140)
+                    smsManager.sendTextMessage(sms.phoneNumber, null, sms.text, null, null);
+                else {
+                    ArrayList<String> parts = smsManager.divideMessage(sms.text);
+                    smsManager.sendMultipartTextMessage(sms.phoneNumber, null, parts,
+                            null, null);
+                }
+
+
             }
 
             messages.add(sms);

@@ -550,6 +550,7 @@
     <string name="nsclientinternal_title">NSClient</string>
     <string name="nsclientinternal_url_title">Nightscout URL</string>
     <string name="nsclientinternal_url_dialogmessage">Enter Your Nightscout URL</string>
+    <string name="telegram_group_url_dialogmessage">Enter your Telegram group URL</string>
     <string name="nsclientinternal_secret_title">NS API secret</string>
     <string name="nsclientinternal_secret_dialogtitle">NS API secret</string>
     <string name="nsclientinternal_secret_dialogmessage">Enter NS API secret (min 12 chars)</string>
@@ -1667,6 +1668,9 @@
     <string name="bolusconstraintappliedwarning"><![CDATA[<font color=\'%1$s\'>Bolus constraint applied: %2$.2fU to %3$.2fU</font>]]></string>
     <string name="slowabsorptiondetected"><![CDATA[<font color=\'%1$s\'>!!!!! Slow carbs absorption detected: %2$d%% of time. Double check your calculation. COB can be really off !!!!!</font>]]></string>
     <string name="reservoirvalue">%1$.0f / %2$d U</string>
+
+    <string name="key_telegram_group_url">telegram_group_url</string>
+    <string name="telegram_group_url_title">Telegram group URL</string>
 
     <plurals name="objective_days">
         <item quantity="one">%1$d day</item>

@@ -1,5 +1,8 @@
 package info.nightscout.androidaps.queue.commands;
 
+import android.util.Log;
+
+import org.jcw.JCUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,11 +36,19 @@ public class CommandTempBasalAbsolute extends Command {
     @Override
     public void execute() {
         PumpEnactResult r = ConfigBuilderPlugin.getPlugin().getActivePump().setTempBasalAbsolute(absoluteRate, durationInMinutes, profile, enforceNew);
+
+        //PRINCIPIO adaptación para informar desde aquí de las basales temporales, porque aquí sabemos si se ha hecho efectiva (enacted) o no
+        String command = "CommandTempBasalAbsolute.execute";
+        JCUtil.infoTempTelegram(command, r, absoluteRate, durationInMinutes);
+        //FIN adaptación para informar desde aquí de las basales temporales, porque aquí sabemos si se ha hecho efectiva (enacted) o no
+
         if (L.isEnabled(L.PUMPQUEUE))
             log.debug("Result rate: " + absoluteRate + " durationInMinutes: " + durationInMinutes + " success: " + r.success + " enacted: " + r.enacted);
         if (callback != null)
             callback.result(r).run();
     }
+
+
 
     @Override
     public String status() {

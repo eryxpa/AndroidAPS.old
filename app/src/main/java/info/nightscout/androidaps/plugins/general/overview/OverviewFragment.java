@@ -117,6 +117,7 @@ import info.nightscout.androidaps.utils.DateUtil;
 import info.nightscout.androidaps.utils.DecimalFormatter;
 import info.nightscout.androidaps.utils.DefaultValueHelper;
 import info.nightscout.androidaps.utils.OKDialog;
+import info.nightscout.androidaps.utils.PasswordProtection;
 import info.nightscout.androidaps.utils.Profiler;
 import info.nightscout.androidaps.utils.SP;
 import info.nightscout.androidaps.utils.SingleClickButton;
@@ -327,11 +328,11 @@ public class OverviewFragment extends Fragment implements View.OnClickListener, 
         iobGraph.getGridLabelRenderer().setLabelVerticalWidth(axisWidth);
         iobGraph.getGridLabelRenderer().setNumVerticalLabels(3);
 
-        rangeToDisplay = SP.getInt(R.string.key_rangetodisplay, 6);
+        rangeToDisplay = SP.getInt(R.string.key_rangetodisplay, 4);
 
         bgGraph.setOnLongClickListener(v -> {
-            rangeToDisplay += 6;
-            rangeToDisplay = rangeToDisplay > 24 ? 6 : rangeToDisplay;
+            rangeToDisplay += 4;
+            rangeToDisplay = rangeToDisplay > 24 ? 4 : rangeToDisplay;
             SP.putInt(R.string.key_rangetodisplay, rangeToDisplay);
             updateGUI("rangeChange");
             return false;
@@ -716,8 +717,14 @@ public class OverviewFragment extends Fragment implements View.OnClickListener, 
                 onClickQuickwizard();
                 break;
             case R.id.overview_wizardbutton:
-                WizardDialog wizardDialog = new WizardDialog();
-                wizardDialog.show(manager, "WizardDialog");
+                //WizardDialog wizardDialog = new WizardDialog();
+                //wizardDialog.show(manager, "WizardDialog");
+
+                PasswordProtection.QueryPassword(getActivity(), R.string.settings_password, "settings_password", () -> {
+                    WizardDialog wizardDialog = new WizardDialog();
+                    wizardDialog.show(manager, "WizardDialog");
+                }, null);
+
                 break;
             case R.id.overview_calibrationbutton:
                 if (xdrip) {
@@ -751,14 +758,29 @@ public class OverviewFragment extends Fragment implements View.OnClickListener, 
                 }
                 break;
             case R.id.overview_treatmentbutton:
-                NewTreatmentDialog treatmentDialogFragment = new NewTreatmentDialog();
-                treatmentDialogFragment.show(manager, "TreatmentDialog");
+                //NewTreatmentDialog treatmentDialogFragment = new NewTreatmentDialog();
+                //treatmentDialogFragment.show(manager, "TreatmentDialog");
+
+                PasswordProtection.QueryPassword(getActivity(), R.string.settings_password, "settings_password", () -> {
+                    NewTreatmentDialog treatmentDialogFragment = new NewTreatmentDialog();
+                    treatmentDialogFragment.show(manager, "TreatmentDialog");
+                }, null);
+
+
                 break;
             case R.id.overview_insulinbutton:
-                new NewInsulinDialog().show(manager, "InsulinDialog");
+                //new NewInsulinDialog().show(manager, "InsulinDialog");
+
+                PasswordProtection.QueryPassword(getActivity(), R.string.settings_password, "settings_password", () -> {
+                    new NewInsulinDialog().show(manager, "InsulinDialog");
+                }, null);
                 break;
             case R.id.overview_carbsbutton:
                 new NewCarbsDialog().show(manager, "CarbsDialog");
+
+                //PasswordProtection.QueryPassword(getActivity(), R.string.settings_password, "settings_password", () -> {
+                //    new NewCarbsDialog().show(manager, "CarbsDialog");
+                //}, null);
                 break;
             case R.id.overview_pumpstatus:
                 if (ConfigBuilderPlugin.getPlugin().getActivePump().isSuspended() || !ConfigBuilderPlugin.getPlugin().getActivePump().isInitialized())

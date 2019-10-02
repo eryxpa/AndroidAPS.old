@@ -60,6 +60,19 @@ public class Profile {
             return "Profile has no JSON";
     }
 
+    public String toString(int indent) {
+        if (json != null) {
+            try {
+                return json.toString(indent);
+            } catch (JSONException e) {
+                return json.toString();
+            }
+        }
+        else
+            return "Profile has no JSON";
+    }
+
+
     // Constructor from profileStore JSON
     public Profile(JSONObject json, String units) {
         init(json, 100, 0);

@@ -35,10 +35,10 @@ public class HardLimits {
     public static final double MAXDIA = 7;
 
     public static final double MINIC = 2;
-    public static final double MAXIC = 100;
+    public static final double MAXIC = 200;
 
     public static final double MINISF = 2; // mgdl
-    public static final double MAXISF = 720; // mgdl
+    public static final double MAXISF = 1800; // mgdl
 
     public static final double[] MAXIOB_AMA = {3, 5, 7, 12};
     public static final double[] MAXIOB_SMB = {3, 7, 12, 25};

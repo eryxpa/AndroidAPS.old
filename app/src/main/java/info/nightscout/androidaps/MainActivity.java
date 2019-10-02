@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Rect;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.os.PowerManager;
@@ -20,6 +21,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -35,8 +37,11 @@ import com.joanzapata.iconify.Iconify;
 import com.joanzapata.iconify.fonts.FontAwesomeModule;
 import com.squareup.otto.Subscribe;
 
+import org.jcw.JCUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Date;
 
 import info.nightscout.androidaps.activities.AgreementActivity;
 import info.nightscout.androidaps.activities.HistoryBrowseActivity;
@@ -76,6 +81,10 @@ public class MainActivity extends NoSplashAppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        JCUtil.setTelegramURL(SP.getString(R.string.key_telegram_group_url, ""));
+        Toast.makeText(this, "Build JCW " + JCUtil.fechaHoraLarga(BuildConfig.BUILD_TIME) + " ("+BuildConfig.VERSION_NAME+") "+"\n"
+                + "Telegram URL:  "+SP.getString(R.string.key_telegram_group_url, ""), Toast.LENGTH_LONG).show();
 
         if (L.isEnabled(L.CORE))
             log.debug("onCreate");
@@ -124,6 +133,7 @@ public class MainActivity extends NoSplashAppCompatActivity {
             VersionCheckerUtilsKt.triggerCheckVersion();
 
         FabricPrivacy.setUserStats();
+        JCUtil.sendTelegramNotification("Iniciado AndroidAPS");
     }
 
     private void checkPluginPreferences(ViewPager viewPager) {
@@ -165,6 +175,7 @@ public class MainActivity extends NoSplashAppCompatActivity {
 
     @Override
     public void onDestroy() {
+        JCUtil.sendTelegramNotification("Terminando AndroidAPS");
         if (L.isEnabled(L.CORE))
             log.debug("onDestroy");
         if (mWakeLock != null)

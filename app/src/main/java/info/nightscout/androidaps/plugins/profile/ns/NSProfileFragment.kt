@@ -11,10 +11,12 @@ import info.nightscout.androidaps.MainApp
 import info.nightscout.androidaps.R
 import info.nightscout.androidaps.plugins.bus.RxBus
 import info.nightscout.androidaps.plugins.configBuilder.ProfileFunctions
+import info.nightscout.androidaps.plugins.general.actions.dialogs.NewExtendedBolusDialog
 import info.nightscout.androidaps.plugins.profile.ns.events.EventNSProfileUpdateGUI
 import info.nightscout.androidaps.utils.DecimalFormatter
 import info.nightscout.androidaps.utils.FabricPrivacy
 import info.nightscout.androidaps.utils.OKDialog
+import info.nightscout.androidaps.utils.PasswordProtection
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.close.*
@@ -36,16 +38,31 @@ class NSProfileFragment : Fragment() {
         close.visibility = View.GONE // not needed for fragment
 
         nsprofile_profileswitch.setOnClickListener {
-            val name = nsprofile_spinner.selectedItem?.toString() ?: ""
-            NSProfilePlugin.getPlugin().profile?.let { store ->
-                store.getSpecificProfile(name)?.let {
-                    OKDialog.showConfirmation(activity,
-                            MainApp.gs(R.string.activate_profile) + ": " + name + " ?"
-                    ) {
-                        ProfileFunctions.doProfileSwitch(store, name, 0, 100, 0)
+//            val name = nsprofile_spinner.selectedItem?.toString() ?: ""
+//            NSProfilePlugin.getPlugin().profile?.let { store ->
+//                store.getSpecificProfile(name)?.let {
+//                    OKDialog.showConfirmation(activity,
+//                            MainApp.gs(R.string.activate_profile) + ": " + name + " ?"
+//                    ) {
+//                        ProfileFunctions.doProfileSwitch(store, name, 0, 100, 0)
+//                    }
+//                }
+//            }
+
+            PasswordProtection.QueryPassword(activity, R.string.settings_password, "settings_password", {
+                val name = nsprofile_spinner.selectedItem?.toString() ?: ""
+                NSProfilePlugin.getPlugin().profile?.let { store ->
+                    store.getSpecificProfile(name)?.let {
+                        OKDialog.showConfirmation(activity,
+                                MainApp.gs(R.string.activate_profile) + ": " + name + " ?"
+                        ) {
+                            ProfileFunctions.doProfileSwitch(store, name, 0, 100, 0)
+                        }
                     }
                 }
-            }
+            }, null)
+
+
         }
 
         nsprofile_spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {

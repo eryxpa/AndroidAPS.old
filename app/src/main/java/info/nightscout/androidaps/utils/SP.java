@@ -2,8 +2,12 @@ package info.nightscout.androidaps.utils;
 
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.util.Log;
+
+import org.jcw.JCUtil;
 
 import info.nightscout.androidaps.MainApp;
+import info.nightscout.androidaps.R;
 
 /**
  * Created by mike on 17.02.2017.
@@ -45,11 +49,65 @@ public class SP {
     }
 
     static public Double getDouble(int resourceID, Double defaultValue) {
-        return SafeParse.stringToDouble(sharedPreferences.getString(MainApp.gs(resourceID), defaultValue.toString()));
+        Double valor = SafeParse.stringToDouble(sharedPreferences.getString(MainApp.gs(resourceID), defaultValue.toString()));
+        Double valorCustom = valor;
+
+        //Adaptación JCW para opcionalmente recuperar el multiplicador de un fichero gestionado externamente
+        if (resourceID == R.string.key_openapsama_current_basal_safety_multiplier)
+        {
+            valorCustom = JCUtil.getCustom_current_basal_safety_multiplier(valor);
+            JCUtil.renameCustom_current_basal_safety_multiplier();
+        }
+        //Adaptación JCW para opcionalmente recuperar el multiplicador de un fichero gestionado externamente
+        if (resourceID == R.string.key_openapsama_max_daily_safety_multiplier)
+        {
+            valorCustom = JCUtil.getCustom_max_daily_safety_multiplier(valor);
+            JCUtil.renameCustom_max_daily_safety_multiplier();
+        }
+
+        if (valor.equals(valorCustom) == false)
+        {
+            //Si el custom es distinto, cambiamos el valor de la preferencia en AAPS
+            String msg = "JCW. Actualizo SharedPreferences de resourceID " + resourceID + " ("+MainApp.gs(resourceID)+") de valor " + valor + " a valor " + valorCustom;
+            Log.i("JCW", msg);
+            putString(resourceID, valorCustom.toString());
+            JCUtil.sendTelegramNotification(msg);
+        }
+
+        valor = valorCustom;
+
+
+        return valor;
     }
 
     static public Double getDouble(String key, Double defaultValue) {
-        return SafeParse.stringToDouble(sharedPreferences.getString(key, defaultValue.toString()));
+        Double valor = SafeParse.stringToDouble(sharedPreferences.getString(key, defaultValue.toString()));
+        Double valorCustom = valor;
+
+        //Adaptación JCW para opcionalmente recuperar el multiplicador de un fichero gestionado externamente
+        if ("openapsama_current_basal_safety_multiplier".equals(key))
+        {
+            valorCustom = JCUtil.getCustom_current_basal_safety_multiplier(valor);
+            JCUtil.renameCustom_current_basal_safety_multiplier();
+        }
+        //Adaptación JCW para opcionalmente recuperar el multiplicador de un fichero gestionado externamente
+        if ("openapsama_max_daily_safety_multiplier".equals(key))
+        {
+            valorCustom = JCUtil.getCustom_max_daily_safety_multiplier(valor);
+            JCUtil.renameCustom_max_daily_safety_multiplier();
+        }
+
+        if (valor.equals(valorCustom) == false)
+        {
+            //Si el custom es distinto, cambiamos el valor de la preferencia en AAPS
+            String msg = "JCW. Actualizo SharedPreferences de key " + key + " de valor " + valor + " a valor " + valorCustom;
+            Log.i("JCW", msg);
+            putString(key, valorCustom.toString());
+            JCUtil.sendTelegramNotification(msg);
+        }
+
+        valor = valorCustom;
+        return valor;
     }
 
     static public int getInt(int resourceID, Integer defaultValue) {

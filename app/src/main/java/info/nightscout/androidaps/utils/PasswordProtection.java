@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import info.nightscout.androidaps.MainApp;
 import info.nightscout.androidaps.R;
@@ -16,6 +17,10 @@ import info.nightscout.androidaps.R;
  */
 
 public class PasswordProtection {
+
+    private static long lastTimePasswordOK = 0;
+    private static long millisCachedPassword = (5*60*1000); //tras acertar la contraseña, no la pedimos durante los siguientes minutos
+
     static public boolean isLocked(String preference) {
         final String password = SP.getString(preference, "");
         if (password.equals("")) {
@@ -26,7 +31,14 @@ public class PasswordProtection {
 
     static public void QueryPassword(final Context context, int stringID, String preference, final Runnable ok, final Runnable fail) {
         final String password = SP.getString(preference, "");
-        if (password.equals("")) {
+        boolean passwordCached = false;
+        if ((lastTimePasswordOK + millisCachedPassword) > System.currentTimeMillis() )
+        {
+            //Si hace poco tiempo que hemos obtenido la contaseña correcta, no volvemos a pedirla
+            passwordCached = true;
+            Toast.makeText(context, "Password cached", Toast.LENGTH_SHORT);
+        }
+        if (password.equals("") || passwordCached) {
             if (ok != null) ok.run();
             return;
         }
@@ -48,6 +60,7 @@ public class PasswordProtection {
                             public void onClick(DialogInterface dialog,int id) {
                                 String enteredPassword = userInput.getText().toString();
                                 if (password.equals(enteredPassword)) {
+                                    lastTimePasswordOK = System.currentTimeMillis();
                                     if (ok != null) ok.run();
                                 } else {
                                     ToastUtils.showToastInUiThread(context, MainApp.gs(R.string.wrongpassword));

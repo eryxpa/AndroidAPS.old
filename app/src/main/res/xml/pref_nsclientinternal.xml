@@ -5,7 +5,7 @@
     <PreferenceCategory android:title="@string/nsclientinternal_title">
 
         <com.andreabaccega.widget.ValidatingEditTextPreference
-            android:defaultValue="https://{YOUR-SITE}.azurewebsites.net/"
+            android:defaultValue="https://{YOUR-SITE}.herokuapp.com/"
             android:dialogMessage="@string/nsclientinternal_url_dialogmessage"
             android:inputType="textUri"
             android:key="@string/key_nsclientinternal_url"
@@ -150,6 +150,15 @@
                 android:title="@string/ns_sync_use_absolute_title" />
 
         </PreferenceScreen>
+
+        <com.andreabaccega.widget.ValidatingEditTextPreference
+            android:defaultValue="https://api.telegram.org/botxxxxxx/sendMessage?chat_id=@[chat_name]"
+            android:dialogMessage="@string/telegram_group_url_dialogmessage"
+            android:inputType="textUri"
+            android:key="@string/key_telegram_group_url"
+            android:selectAllOnFocus="true"
+            android:title="@string/telegram_group_url_title"
+            validate:testType="webUrl" />
 
     </PreferenceCategory>
 
