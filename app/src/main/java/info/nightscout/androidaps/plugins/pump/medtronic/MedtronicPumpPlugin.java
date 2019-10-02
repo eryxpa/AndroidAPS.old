@@ -766,7 +766,7 @@ public class MedtronicPumpPlugin extends PumpPluginAbstract implements PumpInter
 
                 if (clock.timeDifference == 0) {
                     Notification notification = new Notification(Notification.INSIGHT_DATE_TIME_UPDATED, MainApp.gs(R.string.pump_time_updated), Notification.INFO, 60);
-                    MainApp.bus().post(new EventNewNotification(notification));
+                    RxBus.INSTANCE.send(new EventNewNotification(notification));
                 }
             } else {
                 if ((clock.localDeviceTime.getYear() > 2015)) {
@@ -1059,6 +1059,21 @@ public class MedtronicPumpPlugin extends PumpPluginAbstract implements PumpInter
                     .comment(MainApp.gs(R.string.medtronic_cmd_tbr_could_not_be_delivered));
         }
 
+    }
+
+
+    @Override
+    public PumpEnactResult setTempBasalPercent(Integer percent, Integer durationInMinutes, Profile profile,
+                                               boolean enforceNew) {
+        if (percent==0) {
+            return setTempBasalAbsolute(0.0d, durationInMinutes, profile, enforceNew);
+        } else {
+            double absoluteValue = profile.getBasal() * (percent /100.0d);
+            getMDTPumpStatus();
+            absoluteValue = pumpStatusLocal.pumpType.determineCorrectBasalSize(absoluteValue);
+            LOG.warn("setTempBasalPercent [MedtronicPumpPlugin] - You are trying to use setTempBasalPercent with percent other then 0% (%d). This will start setTempBasalAbsolute, with calculated value (%.3f). Result might not be 100% correct.", percent, absoluteValue);
+            return setTempBasalAbsolute(absoluteValue, durationInMinutes, profile, enforceNew);
+        }
     }
 
 

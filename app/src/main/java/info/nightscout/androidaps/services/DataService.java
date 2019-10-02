@@ -1,12 +1,9 @@
 package info.nightscout.androidaps.services;
 
-import android.content.Context;
+import android.app.IntentService;
 import android.content.Intent;
 import android.os.Bundle;
 import android.provider.Telephony;
-
-import androidx.annotation.NonNull;
-import androidx.core.app.JobIntentService;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -21,6 +18,7 @@ import info.nightscout.androidaps.events.EventNsFood;
 import info.nightscout.androidaps.events.EventNsTreatment;
 import info.nightscout.androidaps.logging.BundleLogger;
 import info.nightscout.androidaps.logging.L;
+import info.nightscout.androidaps.plugins.bus.RxBus;
 import info.nightscout.androidaps.plugins.general.nsclient.data.NSDeviceStatus;
 import info.nightscout.androidaps.plugins.general.nsclient.data.NSMbg;
 import info.nightscout.androidaps.plugins.general.nsclient.data.NSSettingsStatus;
@@ -42,26 +40,16 @@ import info.nightscout.androidaps.utils.JsonHelper;
 import info.nightscout.androidaps.utils.SP;
 
 
-public class DataService extends JobIntentService {
+public class DataService extends IntentService {
     private Logger log = LoggerFactory.getLogger(L.DATASERVICE);
 
-    // Service unique ID
-    static final int SERVICE_JOB_ID = 4378;
-
-    // Enqueuing work in to this service.
-    public static void enqueueWork(Context context, Intent work) {
-        enqueueWork(context, DataService.class, SERVICE_JOB_ID, work);
+    public DataService() {
+        super("DataService");
+        registerBus();
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (L.isEnabled(L.DATASERVICE))
-            log.debug("All work complete");
-    }
-
-    @Override
-    protected void onHandleWork(@NonNull Intent intent) {
+    protected void onHandleIntent(final Intent intent) {
         if (L.isEnabled(L.DATASERVICE)) {
             log.debug("onHandleIntent " + intent);
             log.debug("onHandleIntent " + BundleLogger.log(intent.getExtras()));
@@ -121,6 +109,22 @@ public class DataService extends JobIntentService {
 
         if (L.isEnabled(L.DATASERVICE))
             log.debug("onHandleIntent exit " + intent);
+        DataReceiver.completeWakefulIntent(intent);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        MainApp.bus().unregister(this);
+    }
+
+    private void registerBus() {
+        try {
+            MainApp.bus().unregister(this);
+        } catch (RuntimeException x) {
+            // Ignore
+        }
+        MainApp.bus().register(this);
     }
 
     private void handleNewDataFromNSClient(Intent intent) {
@@ -251,7 +255,7 @@ public class DataService extends JobIntentService {
             if (date > now - 15 * 60 * 1000L && !notes.isEmpty()
                     && !enteredBy.equals(SP.getString("careportal_enteredby", "AndroidAPS"))) {
                 Notification announcement = new Notification(Notification.NSANNOUNCEMENT, notes, Notification.ANNOUNCEMENT, 60);
-                MainApp.bus().post(new EventNewNotification(announcement));
+                RxBus.INSTANCE.send(new EventNewNotification(announcement));
             }
         }
     }

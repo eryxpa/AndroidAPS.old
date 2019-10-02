@@ -1,14 +1,10 @@
 package info.nightscout.androidaps;
 
 import android.app.Application;
-import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.os.SystemClock;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.PluralsRes;
@@ -44,7 +40,7 @@ import info.nightscout.androidaps.plugins.constraints.dstHelper.DstHelperPlugin;
 import info.nightscout.androidaps.plugins.constraints.objectives.ObjectivesPlugin;
 import info.nightscout.androidaps.plugins.constraints.safety.SafetyPlugin;
 import info.nightscout.androidaps.plugins.constraints.storage.StorageConstraintPlugin;
-import info.nightscout.androidaps.plugins.general.actions.ActionsFragment;
+import info.nightscout.androidaps.plugins.general.actions.ActionsPlugin;
 import info.nightscout.androidaps.plugins.general.automation.AutomationPlugin;
 import info.nightscout.androidaps.plugins.general.careportal.CareportalPlugin;
 import info.nightscout.androidaps.plugins.general.food.FoodPlugin;
@@ -58,7 +54,6 @@ import info.nightscout.androidaps.plugins.general.overview.OverviewPlugin;
 import info.nightscout.androidaps.plugins.general.persistentNotification.PersistentNotificationPlugin;
 import info.nightscout.androidaps.plugins.general.signatureVerifier.SignatureVerifier;
 import info.nightscout.androidaps.plugins.general.smsCommunicator.SmsCommunicatorPlugin;
-import info.nightscout.androidaps.plugins.general.tidepool.TidepoolPlugin;
 import info.nightscout.androidaps.plugins.general.versionChecker.VersionCheckerPlugin;
 import info.nightscout.androidaps.plugins.general.wear.WearPlugin;
 import info.nightscout.androidaps.plugins.general.xdripStatusline.StatuslinePlugin;
@@ -70,8 +65,6 @@ import info.nightscout.androidaps.plugins.profile.local.LocalProfilePlugin;
 import info.nightscout.androidaps.plugins.profile.ns.NSProfilePlugin;
 import info.nightscout.androidaps.plugins.profile.simple.SimpleProfilePlugin;
 import info.nightscout.androidaps.plugins.pump.combo.ComboPlugin;
-import info.nightscout.androidaps.plugins.pump.common.hw.rileylink.RileyLinkConst;
-import info.nightscout.androidaps.plugins.pump.common.hw.rileylink.RileyLinkUtil;
 import info.nightscout.androidaps.plugins.pump.danaR.DanaRPlugin;
 import info.nightscout.androidaps.plugins.pump.danaRKorean.DanaRKoreanPlugin;
 import info.nightscout.androidaps.plugins.pump.danaRS.DanaRSPlugin;
@@ -139,6 +132,8 @@ public class MainApp extends Application {
         sConstraintsChecker = new ConstraintChecker();
         sDatabaseHelper = OpenHelperManager.getHelper(sInstance, DatabaseHelper.class);
 
+        Thread.setDefaultUncaughtExceptionHandler((thread, ex) -> log.error("Uncaught exception crashing app", ex));
+
         try {
             if (FabricPrivacy.fabricEnabled()) {
                 Fabric.with(this, new Crashlytics());
@@ -173,9 +168,9 @@ public class MainApp extends Application {
         if (pluginsList == null) {
             pluginsList = new ArrayList<>();
             // Register all tabs in app here
-            pluginsList.add(OverviewPlugin.getPlugin());
+            pluginsList.add(OverviewPlugin.INSTANCE);
             pluginsList.add(IobCobCalculatorPlugin.getPlugin());
-            if (Config.ACTION) pluginsList.add(ActionsFragment.getPlugin());
+            if (Config.ACTION) pluginsList.add(ActionsPlugin.INSTANCE);
             pluginsList.add(InsulinOrefRapidActingPlugin.getPlugin());
             pluginsList.add(InsulinOrefUltraRapidActingPlugin.getPlugin());
             pluginsList.add(InsulinOrefFreePeakPlugin.getPlugin());
@@ -190,7 +185,8 @@ public class MainApp extends Application {
             if (Config.PUMPDRIVERS) pluginsList.add(LocalInsightPlugin.getPlugin());
             pluginsList.add(CareportalPlugin.getPlugin());
             if (Config.PUMPDRIVERS) pluginsList.add(ComboPlugin.getPlugin());
-            if (Config.PUMPDRIVERS && engineeringMode) pluginsList.add(MedtronicPumpPlugin.getPlugin());
+            if (Config.PUMPDRIVERS && engineeringMode)
+                pluginsList.add(MedtronicPumpPlugin.getPlugin());
             if (Config.MDI) pluginsList.add(MDIPlugin.getPlugin());
             pluginsList.add(VirtualPumpPlugin.getPlugin());
             if (Config.APS) pluginsList.add(LoopPlugin.getPlugin());
@@ -205,7 +201,7 @@ public class MainApp extends Application {
             if (Config.SAFETY) pluginsList.add(VersionCheckerPlugin.INSTANCE);
             if (Config.SAFETY) pluginsList.add(StorageConstraintPlugin.getPlugin());
             if (Config.SAFETY) pluginsList.add(SignatureVerifier.getPlugin());
-            if (Config.APS) pluginsList.add(ObjectivesPlugin.getPlugin());
+            if (Config.APS) pluginsList.add(ObjectivesPlugin.INSTANCE);
             pluginsList.add(SourceXdripPlugin.getPlugin());
             pluginsList.add(SourceNSClientPlugin.getPlugin());
             pluginsList.add(SourceMM640gPlugin.getPlugin());
@@ -221,11 +217,9 @@ public class MainApp extends Application {
             pluginsList.add(StatuslinePlugin.initPlugin(this));
             pluginsList.add(PersistentNotificationPlugin.getPlugin());
             pluginsList.add(NSClientPlugin.getPlugin());
-            if (engineeringMode)
-                pluginsList.add(TidepoolPlugin.INSTANCE);
+//            if (engineeringMode) pluginsList.add(TidepoolPlugin.INSTANCE);
             pluginsList.add(MaintenancePlugin.initPlugin(this));
-            if (engineeringMode)
-                pluginsList.add(AutomationPlugin.INSTANCE);
+            pluginsList.add(AutomationPlugin.INSTANCE);
 
             pluginsList.add(ConfigBuilderPlugin.getPlugin());
 
@@ -451,7 +445,7 @@ public class MainApp extends Application {
             unregisterReceiver(btReceiver);
         }
 
-        if (timeDateOrTZChangeReceiver!=null) {
+        if (timeDateOrTZChangeReceiver != null) {
             unregisterReceiver(timeDateOrTZChangeReceiver);
         }
 
