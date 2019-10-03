@@ -50,12 +50,6 @@ import info.nightscout.androidaps.utils.SingleClickButton;
 
 public class ActionsFragment extends SubscriberFragment implements View.OnClickListener {
 
-    static ActionsPlugin actionsPlugin = new ActionsPlugin();
-
-    static public ActionsPlugin getPlugin() {
-        return actionsPlugin;
-    }
-
     private View actionsFragmentView;
     private SingleClickButton profileSwitch;
     private SingleClickButton tempTarget;
