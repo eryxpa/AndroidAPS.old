@@ -2,7 +2,6 @@ package info.nightscout.androidaps.plugins.general.nsclient.broadcasts;
 
 import android.content.Intent;
 import android.os.Bundle;
-
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import org.json.JSONArray;
