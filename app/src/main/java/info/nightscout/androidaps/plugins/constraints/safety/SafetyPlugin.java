@@ -1,7 +1,5 @@
 package info.nightscout.androidaps.plugins.constraints.safety;
 
-import org.jcw.JCUtil;
-
 import info.nightscout.androidaps.Config;
 import info.nightscout.androidaps.MainApp;
 import info.nightscout.androidaps.R;
@@ -136,20 +134,10 @@ public class SafetyPlugin extends PluginBase implements ConstraintsInterface {
 
             // Check percentRate but absolute rate too, because we know real current basal in pump
             Double maxBasalMult = SP.getDouble(R.string.key_openapsama_current_basal_safety_multiplier, 4d);
-
-            //Adaptación JCW para opcionalmente recuperar el multiplicador de un fichero gestionado externamente
-            //maxBasalMult = JCUtil.getCustom_current_basal_safety_multiplier(maxBasalMult);
-
-
             double maxFromBasalMult = Math.floor(maxBasalMult * profile.getBasal() * 100) / 100;
             absoluteRate.setIfSmaller(maxFromBasalMult, String.format(MainApp.gs(R.string.limitingbasalratio), maxFromBasalMult, MainApp.gs(R.string.maxbasalmultiplier)), this);
 
             Double maxBasalFromDaily = SP.getDouble(R.string.key_openapsama_max_daily_safety_multiplier, 3d);
-
-            //Adaptación JCW para opcionalmente recuperar el multiplicador de un fichero gestionado externamente
-            //maxBasalFromDaily = JCUtil.getCustom_max_daily_safety_multiplier(maxBasalFromDaily);
-
-
             double maxFromDaily = Math.floor(profile.getMaxDailyBasal() * maxBasalFromDaily * 100) / 100;
             absoluteRate.setIfSmaller(maxFromDaily, String.format(MainApp.gs(R.string.limitingbasalratio), maxFromDaily, MainApp.gs(R.string.maxdailybasalmultiplier)), this);
         }

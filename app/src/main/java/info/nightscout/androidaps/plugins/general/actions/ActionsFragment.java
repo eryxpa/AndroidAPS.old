@@ -72,18 +72,18 @@ public class ActionsFragment extends SubscriberFragment implements View.OnClickL
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        try {
-            View view = inflater.inflate(R.layout.actions_fragment, container, false);
 
-            profileSwitch = view.findViewById(R.id.actions_profileswitch);
-            tempTarget = view.findViewById(R.id.actions_temptarget);
-            extendedBolus = view.findViewById(R.id.actions_extendedbolus);
-            extendedBolusCancel = view.findViewById(R.id.actions_extendedbolus_cancel);
-            tempBasal = view.findViewById(R.id.actions_settempbasal);
-            tempBasalCancel = view.findViewById(R.id.actions_canceltempbasal);
-            fill = view.findViewById(R.id.actions_fill);
-            tddStats = view.findViewById(R.id.actions_tddstats);
-            history = view.findViewById(R.id.actions_historybrowser);
+        View view = inflater.inflate(R.layout.actions_fragment, container, false);
+
+        profileSwitch = view.findViewById(R.id.actions_profileswitch);
+        tempTarget = view.findViewById(R.id.actions_temptarget);
+        extendedBolus = view.findViewById(R.id.actions_extendedbolus);
+        extendedBolusCancel = view.findViewById(R.id.actions_extendedbolus_cancel);
+        tempBasal = view.findViewById(R.id.actions_settempbasal);
+        tempBasalCancel = view.findViewById(R.id.actions_canceltempbasal);
+        fill = view.findViewById(R.id.actions_fill);
+        tddStats = view.findViewById(R.id.actions_tddstats);
+        history = view.findViewById(R.id.actions_historybrowser);
 
         profileSwitch.setOnClickListener(this);
         tempTarget.setOnClickListener(this);
@@ -97,14 +97,9 @@ public class ActionsFragment extends SubscriberFragment implements View.OnClickL
 
         actionsFragmentView = view;
 
-            updateGUI();
-            SP.putBoolean(R.string.key_objectiveuseactions, true);
-            return view;
-        } catch (Exception e) {
-            FabricPrivacy.logException(e);
-        }
-
-        return null;
+        updateGUI();
+        SP.putBoolean(R.string.key_objectiveuseactions, true);
+        return view;
     }
 
     @Subscribe
@@ -291,12 +286,6 @@ public class ActionsFragment extends SubscriberFragment implements View.OnClickL
         FragmentManager manager = getFragmentManager();
         switch (view.getId()) {
             case R.id.actions_profileswitch:
-//                NewNSTreatmentDialog newDialog = new NewNSTreatmentDialog();
-//                final OptionsToShow profileswitch = CareportalFragment.PROFILESWITCH;
-//                profileswitch.executeProfileSwitch = true;
-//                newDialog.setOptions(profileswitch, R.string.careportal_profileswitch);
-//                newDialog.show(manager, "NewNSTreatmentDialog");
-
                 PasswordProtection.QueryPassword(getActivity(), R.string.settings_password, "settings_password", () -> {
                     NewNSTreatmentDialog newDialog = new NewNSTreatmentDialog();
                     final OptionsToShow profileswitch = CareportalFragment.PROFILESWITCH;
@@ -314,10 +303,7 @@ public class ActionsFragment extends SubscriberFragment implements View.OnClickL
                 newTTDialog.show(manager, "NewNSTreatmentDialog");
                 break;
             case R.id.actions_extendedbolus:
-                //NewExtendedBolusDialog newExtendedDialog = new NewExtendedBolusDialog();
-                //newExtendedDialog.show(manager, "NewExtendedDialog");
-
-                PasswordProtection.QueryPassword(getActivity(), R.string.settings_password, "settings_password", () -> {
+                 PasswordProtection.QueryPassword(getActivity(), R.string.settings_password, "settings_password", () -> {
                     NewExtendedBolusDialog newExtendedDialog = new NewExtendedBolusDialog();
                     newExtendedDialog.show(manager, "NewExtendedDialog");
                 }, null);
@@ -334,9 +320,6 @@ public class ActionsFragment extends SubscriberFragment implements View.OnClickL
                 }
                 break;
             case R.id.actions_settempbasal:
-                //NewTempBasalDialog newTempDialog = new NewTempBasalDialog();
-                //newTempDialog.show(manager, "NewTempDialog");
-
                 PasswordProtection.QueryPassword(getActivity(), R.string.settings_password, "settings_password", () -> {
                     NewTempBasalDialog newTempDialog = new NewTempBasalDialog();
                     newTempDialog.show(manager, "NewTempDialog");
@@ -344,9 +327,6 @@ public class ActionsFragment extends SubscriberFragment implements View.OnClickL
 
                 break;
             case R.id.actions_fill:
-                //FillDialog fillDialog = new FillDialog();
-                //fillDialog.show(manager, "FillDialog");
-
                 PasswordProtection.QueryPassword(getActivity(), R.string.settings_password, "settings_password", () -> {
                     FillDialog fillDialog = new FillDialog();
                     fillDialog.show(manager, "FillDialog");

@@ -2,7 +2,6 @@ package info.nightscout.androidaps.plugins.general.nsclient.broadcasts;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.provider.Telephony;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -84,10 +83,6 @@ public class BroadcastTreatment {
             bundle.putString("treatments", part.toString());
             bundle.putBoolean("delta", isDelta);
             Intent intent = new Intent(Intents.ACTION_CHANGED_TREATMENT);
-
-
-            //Intent i2 = new Intent(Telephony.Sms.Intents.SMS_RECEIVED_ACTION);
-
             intent.putExtras(bundle);
             intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
             LocalBroadcastManager.getInstance(MainApp.instance()).sendBroadcast(intent);

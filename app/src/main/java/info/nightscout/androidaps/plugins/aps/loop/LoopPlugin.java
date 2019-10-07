@@ -432,7 +432,6 @@ public class LoopPlugin extends PluginBase {
                             .setPriority(Notification.PRIORITY_HIGH)
                             .setCategory(Notification.CATEGORY_ALARM)
                             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
-                            //.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
                     if (SP.getBoolean("wearcontrol", false)) {
                         builder.setLocalOnly(true);
                     }
@@ -593,9 +592,6 @@ public class LoopPlugin extends PluginBase {
                 if (L.isEnabled(L.APS))
                     log.debug("applyAPSRequest: Temp basal set correctly");
 
-                //informar de basal temporal establecida
-                //writeToFileTempBasals(request);
-
                 if (callback != null) {
                     callback.result(new PumpEnactResult().absolute(activeTemp.tempBasalConvertedToAbsolute(now, profile))
                             .enacted(false).success(true).duration(activeTemp.getPlannedRemainingMinutes())
@@ -608,7 +604,6 @@ public class LoopPlugin extends PluginBase {
             }
         }
     }
-
 
     public void applySMBRequest(APSResult request, Callback callback) {
         if (!request.bolusRequested) {

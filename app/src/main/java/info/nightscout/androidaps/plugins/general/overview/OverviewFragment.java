@@ -717,9 +717,6 @@ public class OverviewFragment extends Fragment implements View.OnClickListener, 
                 onClickQuickwizard();
                 break;
             case R.id.overview_wizardbutton:
-                //WizardDialog wizardDialog = new WizardDialog();
-                //wizardDialog.show(manager, "WizardDialog");
-
                 PasswordProtection.QueryPassword(getActivity(), R.string.settings_password, "settings_password", () -> {
                     WizardDialog wizardDialog = new WizardDialog();
                     wizardDialog.show(manager, "WizardDialog");
@@ -758,9 +755,6 @@ public class OverviewFragment extends Fragment implements View.OnClickListener, 
                 }
                 break;
             case R.id.overview_treatmentbutton:
-                //NewTreatmentDialog treatmentDialogFragment = new NewTreatmentDialog();
-                //treatmentDialogFragment.show(manager, "TreatmentDialog");
-
                 PasswordProtection.QueryPassword(getActivity(), R.string.settings_password, "settings_password", () -> {
                     NewTreatmentDialog treatmentDialogFragment = new NewTreatmentDialog();
                     treatmentDialogFragment.show(manager, "TreatmentDialog");
@@ -769,18 +763,12 @@ public class OverviewFragment extends Fragment implements View.OnClickListener, 
 
                 break;
             case R.id.overview_insulinbutton:
-                //new NewInsulinDialog().show(manager, "InsulinDialog");
-
                 PasswordProtection.QueryPassword(getActivity(), R.string.settings_password, "settings_password", () -> {
                     new NewInsulinDialog().show(manager, "InsulinDialog");
                 }, null);
                 break;
             case R.id.overview_carbsbutton:
                 new NewCarbsDialog().show(manager, "CarbsDialog");
-
-                //PasswordProtection.QueryPassword(getActivity(), R.string.settings_password, "settings_password", () -> {
-                //    new NewCarbsDialog().show(manager, "CarbsDialog");
-                //}, null);
                 break;
             case R.id.overview_pumpstatus:
                 if (ConfigBuilderPlugin.getPlugin().getActivePump().isSuspended() || !ConfigBuilderPlugin.getPlugin().getActivePump().isInitialized())

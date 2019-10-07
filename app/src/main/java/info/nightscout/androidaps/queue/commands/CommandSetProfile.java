@@ -44,11 +44,11 @@ public class CommandSetProfile extends Command {
 
         PumpEnactResult r = ConfigBuilderPlugin.getPlugin().getActivePump().setNewBasalProfile(profile);
 
-        //PRINCIPIO adaptación para informar desde aquí de las basales temporales, porque aquí sabemos si se ha hecho efectiva (enacted) o no
+        //PRINCIPIO adaptación para informar desde aquí del cambio de perfil, porque aquí sabemos si se ha hecho efectivo (enacted) o no
         String command = "CommandSetProfile.execute";
         //JCUtil.infoTempTelegram(command, r, -999, -999);
         JCUtil.infoProfileSetTelegram(profile, r, command);
-        //FIN adaptación para informar desde aquí de las basales temporales, porque aquí sabemos si se ha hecho efectiva (enacted) o no
+        //FIN adaptación para informar desde aquí del cambio de perfil, porque aquí sabemos si se ha hecho efectivo (enacted) o no
 
         if (L.isEnabled(L.PUMPQUEUE))
             log.debug("Result success: " + r.success + " enacted: " + r.enacted + " profile: " + profile.toString());

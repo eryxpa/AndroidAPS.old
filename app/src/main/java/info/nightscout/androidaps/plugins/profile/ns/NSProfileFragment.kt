@@ -38,17 +38,6 @@ class NSProfileFragment : Fragment() {
         close.visibility = View.GONE // not needed for fragment
 
         nsprofile_profileswitch.setOnClickListener {
-//            val name = nsprofile_spinner.selectedItem?.toString() ?: ""
-//            NSProfilePlugin.getPlugin().profile?.let { store ->
-//                store.getSpecificProfile(name)?.let {
-//                    OKDialog.showConfirmation(activity,
-//                            MainApp.gs(R.string.activate_profile) + ": " + name + " ?"
-//                    ) {
-//                        ProfileFunctions.doProfileSwitch(store, name, 0, 100, 0)
-//                    }
-//                }
-//            }
-
             PasswordProtection.QueryPassword(activity, R.string.settings_password, "settings_password", {
                 val name = nsprofile_spinner.selectedItem?.toString() ?: ""
                 NSProfilePlugin.getPlugin().profile?.let { store ->
