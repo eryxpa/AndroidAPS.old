@@ -151,14 +151,53 @@
 
         </PreferenceScreen>
 
-        <com.andreabaccega.widget.ValidatingEditTextPreference
-            android:defaultValue="https://api.telegram.org/botxxxxxx/sendMessage?chat_id=@[chat_name]"
-            android:dialogMessage="@string/telegram_group_url_dialogmessage"
-            android:inputType="textUri"
-            android:key="@string/key_telegram_group_url"
-            android:selectAllOnFocus="true"
-            android:title="@string/telegram_group_url_title"
-            validate:testType="webUrl" />
+        <PreferenceScreen android:title="@string/jcwextrasettings_title">
+
+            <com.andreabaccega.widget.ValidatingEditTextPreference
+                android:defaultValue="https://api.telegram.org/botxxxxxx/sendMessage?chat_id=@[chat_name]"
+                android:dialogMessage="@string/telegram_group_url_summary"
+                android:inputType="textUri"
+                android:key="@string/key_telegram_group_url"
+                android:selectAllOnFocus="true"
+                android:title="@string/telegram_group_url_title"
+                android:summary="@string/telegram_group_url_summary"
+                validate:testType="webUrl" />
+
+            <SwitchPreference
+                android:defaultValue="false"
+                android:key="@string/key_notify_by_telegram"
+                android:summary="@string/send_telegram_notifications_summary"
+                android:title="@string/send_telegram_notifications_tittle" />
+
+            <SwitchPreference
+                android:defaultValue="false"
+                android:key="@string/key_send_telegrams_instead_of_sms"
+                android:summary="@string/send_telegram_instead_sms_summary"
+                android:title="@string/send_telegram_instead_sms_tittle" />
+
+            <SwitchPreference
+                android:defaultValue="false"
+                android:key="@string/key_require_insulin_password"
+                android:summary="@string/require_password_on_insulin_summary"
+                android:title="@string/require_password_on_insulin_tittle" />
+
+            <com.andreabaccega.widget.ValidatingEditTextPreference
+                android:defaultValue="0"
+                android:digits="0123456789"
+                android:inputType="number"
+                android:key="@string/key_password_cache_time"
+                android:maxLines="1"
+                android:selectAllOnFocus="true"
+                android:singleLine="true"
+                android:title="@string/password_cache_tittle"
+                android:summary="@string/password_cache_summary"
+                android:dialogMessage="@string/password_cache_summary"
+                validate:maxNumber="60"
+                validate:minNumber="0"
+                validate:testType="numericRange" />
+
+
+        </PreferenceScreen>
 
     </PreferenceCategory>
 

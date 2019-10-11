@@ -1598,6 +1598,20 @@
 
     <string name="key_telegram_group_url">telegram_group_url</string>
     <string name="telegram_group_url_title">Telegram group URL</string>
+    <string name="jcwextrasettings_title">JCW Extra Settings</string>
+    <string name="key_send_telegrams_instead_of_sms">Telegram responses</string>
+    <string name="send_telegram_instead_sms_tittle">Send Telegram responses instead of SMS</string>
+    <string name="key_notify_by_telegram">Notify by Telegram</string>
+    <string name="send_telegram_notifications_tittle">Send notifications to Telegram channel</string>
+    <string name="key_require_insulin_password">Require password for insulin</string>
+    <string name="require_password_on_insulin_tittle">Require password on insulin actions</string>
+    <string name="key_password_cache_time">Password cache time</string>
+    <string name="password_cache_tittle">Don\'t ask for password on next X minutes</string>
+    <string name="send_telegram_notifications_summary">AndroidAPS enviará notificaciones a través del grupo de Telegram, informando sobre las basales temporales a establecer, los cambios de perfil, etc.</string>
+    <string name="send_telegram_instead_sms_summary">Cuando esté activado, las respuestas a los comandos SMS se enviarán a través del grupo de Telegram, en lugar de utilizar mensajes SMS.</string>
+    <string name="telegram_group_url_summary">URL del bot Telegram que permite enviar mensajes a un canal público Telegram. La URL tendrá este formato: https://api.telegram.org/botxxxxxx/sendMessage?chat_id=@[chat_name]</string>
+    <string name="require_password_on_insulin_summary">Solicitar password en las distintas opciones de AAPS que implican cambio en la infusión de insulina. Por ejemplo bolos, cambios de perfil, basal temporal manual, etc. Se utiliza la misma password que esté habilitada para modificar la configuración.</string>
+    <string name="password_cache_summary">Si está activado el uso de contraseña, se puede establecer un número de minutos durante los cuales no se volverá a pedir la contraseña. Pasado ese tiempo, se requerirá de nuevo la contraseña cuando sea necesaria.</string>
 
 
 </resources>
