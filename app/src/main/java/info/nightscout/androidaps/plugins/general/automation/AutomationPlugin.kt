@@ -202,7 +202,8 @@ object AutomationPlugin : PluginBase(PluginDescription()
                 ActionStopTempTarget(),
                 ActionNotification(),
                 ActionProfileSwitchPercent(),
-                ActionProfileSwitch()
+                ActionProfileSwitch(),
+                ActionSendSMS()
         )
     }
 
@@ -220,7 +221,8 @@ object AutomationPlugin : PluginBase(PluginDescription()
                 TriggerWifiSsid(),
                 TriggerLocation(),
                 TriggerAutosensValue(),
-                TriggerBolusAgo()
+                TriggerBolusAgo(),
+                TriggerPumpLastConnection()
         )
     }
 
