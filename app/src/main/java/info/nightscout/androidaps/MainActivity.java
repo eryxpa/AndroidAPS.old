@@ -23,6 +23,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
@@ -35,7 +36,6 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.tabs.TabLayout;
 import com.joanzapata.iconify.Iconify;
 import com.joanzapata.iconify.fonts.FontAwesomeModule;
-import com.squareup.otto.Subscribe;
 
 import org.jcw.JCUtil;
 import org.slf4j.Logger;
@@ -50,13 +50,13 @@ import info.nightscout.androidaps.activities.PreferencesActivity;
 import info.nightscout.androidaps.activities.SingleFragmentActivity;
 import info.nightscout.androidaps.data.Profile;
 import info.nightscout.androidaps.events.EventAppExit;
-import info.nightscout.androidaps.events.EventFeatureRunning;
 import info.nightscout.androidaps.events.EventPreferenceChange;
-import info.nightscout.androidaps.events.EventRefreshGui;
+import info.nightscout.androidaps.events.EventRebuildTabs;
 import info.nightscout.androidaps.interfaces.PluginBase;
 import info.nightscout.androidaps.interfaces.PluginType;
 import info.nightscout.androidaps.logging.L;
 import info.nightscout.androidaps.plugins.aps.loop.LoopPlugin;
+import info.nightscout.androidaps.plugins.bus.RxBus;
 import info.nightscout.androidaps.plugins.configBuilder.ProfileFunctions;
 import info.nightscout.androidaps.plugins.general.nsclient.data.NSSettingsStatus;
 import info.nightscout.androidaps.plugins.general.versionChecker.VersionCheckerUtilsKt;
@@ -68,9 +68,12 @@ import info.nightscout.androidaps.utils.LocaleHelper;
 import info.nightscout.androidaps.utils.OKDialog;
 import info.nightscout.androidaps.utils.PasswordProtection;
 import info.nightscout.androidaps.utils.SP;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
 
 public class MainActivity extends NoSplashAppCompatActivity {
     private static Logger log = LoggerFactory.getLogger(L.CORE);
+    private CompositeDisposable disposable = new CompositeDisposable();
 
     protected PowerManager.WakeLock mWakeLock;
 
@@ -85,9 +88,6 @@ public class MainActivity extends NoSplashAppCompatActivity {
         JCUtil.setTelegramURL(SP.getString(R.string.key_telegram_group_url, ""));
         Toast.makeText(this, "Build JCW " + JCUtil.fechaHoraLarga(BuildConfig.BUILD_TIME) + " ("+BuildConfig.VERSION_NAME+") "+"\n"
                 + "Telegram URL:  "+SP.getString(R.string.key_telegram_group_url, ""), Toast.LENGTH_LONG).show();
-
-        if (L.isEnabled(L.CORE))
-            log.debug("onCreate");
 
         Iconify.with(new FontAwesomeModule());
         LocaleHelper.onCreate(this, "en");
@@ -104,13 +104,9 @@ public class MainActivity extends NoSplashAppCompatActivity {
         actionBarDrawerToggle.syncState();
 
         // initialize screen wake lock
-        onEventPreferenceChange(new EventPreferenceChange(R.string.key_keep_screen_on));
+        processPreferenceChange(new EventPreferenceChange(R.string.key_keep_screen_on));
 
         doMigrations();
-
-        registerBus();
-        setupTabs();
-        setupViews(false);
 
         final ViewPager viewPager = findViewById(R.id.pager);
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
@@ -153,8 +149,34 @@ public class MainActivity extends NoSplashAppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        if (L.isEnabled(L.CORE))
-            log.debug("onResume");
+        setupTabs();
+        setupViews();
+
+        disposable.add(RxBus.INSTANCE
+                .toObservable(EventRebuildTabs.class)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(event -> {
+                    String lang = SP.getString(R.string.key_language, "en");
+                    LocaleHelper.setLocale(getApplicationContext(), lang);
+                    if (event.getRecreate()) {
+                        recreate();
+                    } else {
+                        setupTabs();
+                        setupViews();
+                    }
+
+                    boolean keepScreenOn = Config.NSCLIENT && SP.getBoolean(R.string.key_keep_screen_on, false);
+                    if (keepScreenOn)
+                        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                    else
+                        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                }, FabricPrivacy::logException)
+        );
+        disposable.add(RxBus.INSTANCE
+                .toObservable(EventPreferenceChange.class)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(this::processPreferenceChange, FabricPrivacy::logException)
+        );
 
         if (!SP.getBoolean(R.string.key_setupwizard_processed, false)) {
             Intent intent = new Intent(this, SetupWizardActivity.class);
@@ -169,23 +191,25 @@ public class MainActivity extends NoSplashAppCompatActivity {
             AndroidPermission.notifyForLocationPermissions(this);
             AndroidPermission.notifyForSMSPermissions(this);
         }
-
-        MainApp.bus().post(new EventFeatureRunning(EventFeatureRunning.Feature.MAIN));
     }
 
     @Override
     public void onDestroy() {
         JCUtil.sendTelegramNotification("Terminando AndroidAPS");
-        if (L.isEnabled(L.CORE))
-            log.debug("onDestroy");
+
         if (mWakeLock != null)
             if (mWakeLock.isHeld())
                 mWakeLock.release();
         super.onDestroy();
     }
 
-    @Subscribe
-    public void onEventPreferenceChange(final EventPreferenceChange ev) {
+    @Override
+    public void onPause() {
+        super.onPause();
+        disposable.clear();
+    }
+
+    public void processPreferenceChange(final EventPreferenceChange ev) {
         if (ev.isChanged(R.string.key_keep_screen_on)) {
             boolean keepScreenOn = SP.getBoolean(R.string.key_keep_screen_on, false);
             final PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
@@ -200,36 +224,10 @@ public class MainActivity extends NoSplashAppCompatActivity {
         }
     }
 
-    @Subscribe
-    public void onStatusEvent(final EventRefreshGui ev) {
-        String lang = SP.getString(R.string.key_language, "en");
-        LocaleHelper.setLocale(getApplicationContext(), lang);
-        runOnUiThread(() -> {
-            if (ev.recreate) {
-                recreate();
-            } else {
-                try { // activity may be destroyed
-                    setupTabs();
-                    setupViews(false);
-                } catch (IllegalStateException e) {
-                    log.error("Unhandled exception", e);
-                }
-            }
-
-            boolean keepScreenOn = Config.NSCLIENT && SP.getBoolean(R.string.key_keep_screen_on, false);
-            if (keepScreenOn)
-                getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-            else
-                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        });
-    }
-
-    private void setupViews(boolean switchToLast) {
+    private void setupViews() {
         TabPageAdapter pageAdapter = new TabPageAdapter(getSupportFragmentManager(), this);
         NavigationView navigationView = findViewById(R.id.navigation_view);
-        navigationView.setNavigationItemSelectedListener(menuItem -> {
-            return true;
-        });
+        navigationView.setNavigationItemSelectedListener(menuItem -> true);
         Menu menu = navigationView.getMenu();
         menu.clear();
         for (PluginBase p : MainApp.getPluginsList()) {
@@ -248,8 +246,8 @@ public class MainActivity extends NoSplashAppCompatActivity {
         }
         ViewPager mPager = findViewById(R.id.pager);
         mPager.setAdapter(pageAdapter);
-        if (switchToLast)
-            mPager.setCurrentItem(pageAdapter.getCount() - 1, false);
+        //if (switchToLast)
+        //    mPager.setCurrentItem(pageAdapter.getCount() - 1, false);
         checkPluginPreferences(mPager);
     }
 
@@ -275,15 +273,6 @@ public class MainActivity extends NoSplashAppCompatActivity {
         }
     }
 
-    private void registerBus() {
-        try {
-            MainApp.bus().unregister(this);
-        } catch (RuntimeException x) {
-            // Ignore
-        }
-        MainApp.bus().register(this);
-    }
-
     private void checkEula() {
         //SP.removeBoolean(R.string.key_i_understand);
         boolean IUnderstand = SP.getBoolean(R.string.key_i_understand, false);
@@ -300,10 +289,10 @@ public class MainActivity extends NoSplashAppCompatActivity {
 
         // guarantee that the unreachable threshold is at least 30 and of type String
         // Added in 1.57 at 21.01.2018
-        Integer unreachable_threshold = SP.getInt(R.string.key_pump_unreachable_threshold, 30);
+        int unreachable_threshold = SP.getInt(R.string.key_pump_unreachable_threshold, 30);
         SP.remove(R.string.key_pump_unreachable_threshold);
         if (unreachable_threshold < 30) unreachable_threshold = 30;
-        SP.putString(R.string.key_pump_unreachable_threshold, unreachable_threshold.toString());
+        SP.putString(R.string.key_pump_unreachable_threshold, Integer.toString(unreachable_threshold));
     }
 
 
@@ -319,19 +308,16 @@ public class MainActivity extends NoSplashAppCompatActivity {
             String message = "Target range is changed in current version.\n\nIt's not taken from preferences but from profile.\n\n!!! REVIEW YOUR SETTINGS !!!";
             message += "\n\nOld settings: " + oldRange;
             message += "\nProfile settings: " + newRange;
-            OKDialog.show(this, "Target range change", message, new Runnable() {
-                @Override
-                public void run() {
-                    SP.remove("openapsma_min_bg");
-                    SP.remove("openapsma_max_bg");
-                    SP.remove("openapsma_target_bg");
-                }
+            OKDialog.show(this, "Target range change", message, () -> {
+                SP.remove("openapsma_min_bg");
+                SP.remove("openapsma_max_bg");
+                SP.remove("openapsma_target_bg");
             });
         }
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (permissions.length != 0) {
             if (ActivityCompat.checkSelfPermission(this, permissions[0]) == PackageManager.PERMISSION_GRANTED) {
@@ -416,7 +402,7 @@ public class MainActivity extends NoSplashAppCompatActivity {
             case R.id.nav_exit:
                 log.debug("Exiting");
                 MainApp.instance().stopKeepAliveService();
-                MainApp.bus().post(new EventAppExit());
+                RxBus.INSTANCE.send(new EventAppExit());
                 MainApp.closeDbHelper();
                 finish();
                 System.runFinalization();

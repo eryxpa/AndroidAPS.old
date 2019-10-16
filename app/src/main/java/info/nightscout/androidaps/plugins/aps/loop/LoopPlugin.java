@@ -15,7 +15,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 
-import com.squareup.otto.Subscribe;
+//import com.squareup.otto.Subscribe;
 
 import org.jcw.JCUtil;
 import org.slf4j.Logger;
@@ -64,12 +64,15 @@ import info.nightscout.androidaps.utils.FabricPrivacy;
 import info.nightscout.androidaps.utils.SP;
 import info.nightscout.androidaps.utils.T;
 import info.nightscout.androidaps.utils.ToastUtils;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * Created by mike on 05.08.2016.
  */
 public class LoopPlugin extends PluginBase {
     private static Logger log = LoggerFactory.getLogger(L.APS);
+    private CompositeDisposable disposable = new CompositeDisposable();
 
     private static final String CHANNEL_ID = "AndroidAPS-Openloop";
 
@@ -118,10 +121,41 @@ public class LoopPlugin extends PluginBase {
 
     @Override
     protected void onStart() {
-        MainApp.bus().register(this);
         createNotificationChannel();
         super.onStart();
         JCUtil.sendTelegramNotification("ACTIVADO lazo cerrado. LOOP ENABLE.");
+
+        disposable.add(RxBus.INSTANCE
+                .toObservable(EventTempTargetChange.class)
+                .observeOn(Schedulers.io())
+                .subscribe(event -> {
+                    invoke("EventTempTargetChange", true);
+                }, FabricPrivacy::logException)
+        );
+        /**
+         * This method is triggered once autosens calculation has completed, so the LoopPlugin
+         * has current data to work with. However, autosens calculation can be triggered by multiple
+         * sources and currently only a new BG should trigger a loop run. Hence we return early if
+         * the event causing the calculation is not EventNewBg.
+         * <p>
+         */
+        disposable.add(RxBus.INSTANCE
+                .toObservable(EventAutosensCalculationFinished.class)
+                .observeOn(Schedulers.io())
+                .subscribe(event -> {
+                    // Autosens calculation not triggered by a new BG
+                    if (!(event.getCause() instanceof EventNewBG)) return;
+
+                    BgReading bgReading = DatabaseHelper.actualBg();
+                    // BG outdated
+                    if (bgReading == null) return;
+                    // already looped with that value
+                    if (bgReading.date <= lastBgTriggeredRun) return;
+
+                    lastBgTriggeredRun = bgReading.date;
+                    invoke("AutosenseCalculation for " + bgReading, true);
+                }, FabricPrivacy::logException)
+        );
     }
 
     private void createNotificationChannel() {
@@ -138,8 +172,9 @@ public class LoopPlugin extends PluginBase {
 
     @Override
     protected void onStop() {
+        disposable.clear();
         super.onStop();
-        MainApp.bus().unregister(this);
+        //MainApp.bus().unregister(this);
         JCUtil.sendTelegramNotification("PARADO lazo cerrado. LOOP DISABLE.");
     }
 
@@ -149,42 +184,9 @@ public class LoopPlugin extends PluginBase {
         return pump == null || pump.getPumpDescription().isTempBasalCapable;
     }
 
-    /**
-     * This method is triggered once autosens calculation has completed, so the LoopPlugin
-     * has current data to work with. However, autosens calculation can be triggered by multiple
-     * sources and currently only a new BG should trigger a loop run. Hence we return early if
-     * the event causing the calculation is not EventNewBg.
-     * <p>
-     */
-    @Subscribe
-    public void onStatusEvent(final EventAutosensCalculationFinished ev) {
-        if (!(ev.getCause() instanceof EventNewBG)) {
-            // Autosens calculation not triggered by a new BG
-            return;
-        }
-        BgReading bgReading = DatabaseHelper.actualBg();
-        if (bgReading == null) {
-            // BG outdated
-            return;
-        }
-        if (bgReading.date <= lastBgTriggeredRun) {
-            // already looped with that value
-            return;
-        }
-
-        lastBgTriggeredRun = bgReading.date;
-        invoke("AutosenseCalculation for " + bgReading, true);
-    }
-
     public long suspendedTo() {
         return loopSuspendedTill;
     }
-
-    @Subscribe
-    public void onStatusEvent(final EventTempTargetChange ev) {
-        new Thread(() -> invoke("EventTempTargetChange", true)).start();
-    }
-
 
     public void suspendTo(long endTime) {
         loopSuspendedTill = endTime;
@@ -443,7 +445,7 @@ public class LoopPlugin extends PluginBase {
                             (NotificationManager) MainApp.instance().getSystemService(Context.NOTIFICATION_SERVICE);
                     // mId allows you to update the notification later on.
                     mNotificationManager.notify(Constants.notificationID, builder.build());
-                    MainApp.bus().post(new EventNewOpenLoopNotification());
+                    RxBus.INSTANCE.send(new EventNewOpenLoopNotification());
 
                     // Send to Wear
                     ActionStringHandler.handleInitiate("changeRequest");
@@ -476,7 +478,7 @@ public class LoopPlugin extends PluginBase {
                     NSUpload.uploadDeviceStatus();
                     SP.incInt(R.string.key_ObjectivesmanualEnacts);
                 }
-                MainApp.bus().post(new EventAcceptOpenLoopChange());
+                RxBus.INSTANCE.send(new EventAcceptOpenLoopChange());
             }
         });
         FabricPrivacy.getInstance().logCustom("AcceptTemp");
