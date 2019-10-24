@@ -2,13 +2,10 @@ package info.nightscout.androidaps;
 
 import android.app.Application;
 import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.IntentFilter;
 import android.content.res.Resources;
-import android.os.PowerManager;
 import android.os.SystemClock;
 
-import androidx.annotation.Nullable;
 import androidx.annotation.PluralsRes;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -26,7 +23,6 @@ import java.util.ArrayList;
 
 import info.nightscout.androidaps.data.ConstraintChecker;
 import info.nightscout.androidaps.db.DatabaseHelper;
-import info.nightscout.androidaps.events.EventPreferenceChange;
 import info.nightscout.androidaps.interfaces.PluginBase;
 import info.nightscout.androidaps.interfaces.PluginType;
 import info.nightscout.androidaps.interfaces.PumpInterface;
@@ -35,7 +31,6 @@ import info.nightscout.androidaps.plugins.aps.loop.LoopPlugin;
 import info.nightscout.androidaps.plugins.aps.openAPSAMA.OpenAPSAMAPlugin;
 import info.nightscout.androidaps.plugins.aps.openAPSMA.OpenAPSMAPlugin;
 import info.nightscout.androidaps.plugins.aps.openAPSSMB.OpenAPSSMBPlugin;
-import info.nightscout.androidaps.plugins.bus.RxBus;
 import info.nightscout.androidaps.plugins.configBuilder.ConfigBuilderPlugin;
 import info.nightscout.androidaps.plugins.constraints.dstHelper.DstHelperPlugin;
 import info.nightscout.androidaps.plugins.constraints.objectives.ObjectivesPlugin;
@@ -53,9 +48,9 @@ import info.nightscout.androidaps.plugins.general.nsclient.receivers.AckAlarmRec
 import info.nightscout.androidaps.plugins.general.nsclient.receivers.DBAccessReceiver;
 import info.nightscout.androidaps.plugins.general.overview.OverviewPlugin;
 import info.nightscout.androidaps.plugins.general.persistentNotification.PersistentNotificationPlugin;
-import info.nightscout.androidaps.plugins.general.signatureVerifier.SignatureVerifier;
+import info.nightscout.androidaps.plugins.constraints.signatureVerifier.SignatureVerifierPlugin;
 import info.nightscout.androidaps.plugins.general.smsCommunicator.SmsCommunicatorPlugin;
-import info.nightscout.androidaps.plugins.general.versionChecker.VersionCheckerPlugin;
+import info.nightscout.androidaps.plugins.constraints.versionChecker.VersionCheckerPlugin;
 import info.nightscout.androidaps.plugins.general.wear.WearPlugin;
 import info.nightscout.androidaps.plugins.general.xdripStatusline.StatuslinePlugin;
 import info.nightscout.androidaps.plugins.insulin.InsulinOrefFreePeakPlugin;
@@ -93,20 +88,13 @@ import info.nightscout.androidaps.receivers.NSAlarmReceiver;
 import info.nightscout.androidaps.receivers.TimeDateOrTZChangeReceiver;
 import info.nightscout.androidaps.services.Intents;
 import info.nightscout.androidaps.utils.FabricPrivacy;
-import info.nightscout.androidaps.utils.SP;
 import io.fabric.sdk.android.Fabric;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.CompositeDisposable;
 
-import static info.nightscout.androidaps.plugins.general.versionChecker.VersionCheckerUtilsKt.triggerCheckVersion;
+import static info.nightscout.androidaps.plugins.constraints.versionChecker.VersionCheckerUtilsKt.triggerCheckVersion;
 
 
 public class MainApp extends Application {
     private static Logger log = LoggerFactory.getLogger(L.CORE);
-    private CompositeDisposable disposable = new CompositeDisposable();
-
-    private PowerManager.WakeLock mWakeLock;
-
     private static KeepAliveReceiver keepAliveReceiver;
 
     private static MainApp sInstance;
@@ -175,7 +163,7 @@ public class MainApp extends Application {
             // Register all tabs in app here
             pluginsList.add(OverviewPlugin.INSTANCE);
             pluginsList.add(IobCobCalculatorPlugin.getPlugin());
-            if (Config.ACTION) pluginsList.add(ActionsPlugin.INSTANCE);
+            if (!Config.NSCLIENT) pluginsList.add(ActionsPlugin.INSTANCE);
             pluginsList.add(InsulinOrefRapidActingPlugin.getPlugin());
             pluginsList.add(InsulinOrefUltraRapidActingPlugin.getPlugin());
             pluginsList.add(InsulinOrefFreePeakPlugin.getPlugin());
@@ -188,25 +176,24 @@ public class MainApp extends Application {
             if (Config.PUMPDRIVERS) pluginsList.add(DanaRv2Plugin.getPlugin());
             if (Config.PUMPDRIVERS) pluginsList.add(DanaRSPlugin.getPlugin());
             if (Config.PUMPDRIVERS) pluginsList.add(LocalInsightPlugin.getPlugin());
-            pluginsList.add(CareportalPlugin.getPlugin());
             if (Config.PUMPDRIVERS) pluginsList.add(ComboPlugin.getPlugin());
-            if (Config.PUMPDRIVERS && engineeringMode)
-                pluginsList.add(MedtronicPumpPlugin.getPlugin());
-            if (Config.MDI) pluginsList.add(MDIPlugin.getPlugin());
+            if (Config.PUMPDRIVERS) pluginsList.add(MedtronicPumpPlugin.getPlugin());
+            if (!Config.NSCLIENT) pluginsList.add(MDIPlugin.getPlugin());
             pluginsList.add(VirtualPumpPlugin.getPlugin());
+            pluginsList.add(CareportalPlugin.getPlugin());
             if (Config.APS) pluginsList.add(LoopPlugin.getPlugin());
             if (Config.APS) pluginsList.add(OpenAPSMAPlugin.getPlugin());
             if (Config.APS) pluginsList.add(OpenAPSAMAPlugin.getPlugin());
             if (Config.APS) pluginsList.add(OpenAPSSMBPlugin.getPlugin());
             pluginsList.add(NSProfilePlugin.getPlugin());
-            if (Config.OTHERPROFILES) pluginsList.add(SimpleProfilePlugin.getPlugin());
-            if (Config.OTHERPROFILES) pluginsList.add(LocalProfilePlugin.getPlugin());
+            if (!Config.NSCLIENT) pluginsList.add(SimpleProfilePlugin.getPlugin());
+            if (!Config.NSCLIENT) pluginsList.add(LocalProfilePlugin.getPlugin());
             pluginsList.add(TreatmentsPlugin.getPlugin());
-            if (Config.SAFETY) pluginsList.add(SafetyPlugin.getPlugin());
-            if (Config.SAFETY) pluginsList.add(VersionCheckerPlugin.INSTANCE);
-            if (Config.SAFETY) pluginsList.add(StorageConstraintPlugin.getPlugin());
-            if (Config.SAFETY) pluginsList.add(SignatureVerifier.getPlugin());
-            if (Config.APS) pluginsList.add(ObjectivesPlugin.INSTANCE);
+            if (!Config.NSCLIENT) pluginsList.add(SafetyPlugin.getPlugin());
+            if (!Config.NSCLIENT) pluginsList.add(VersionCheckerPlugin.INSTANCE);
+            if (!Config.NSCLIENT) pluginsList.add(StorageConstraintPlugin.getPlugin());
+            if (!Config.NSCLIENT) pluginsList.add(SignatureVerifierPlugin.getPlugin());
+            if (!Config.APS) pluginsList.add(ObjectivesPlugin.INSTANCE);
             pluginsList.add(SourceXdripPlugin.getPlugin());
             pluginsList.add(SourceNSClientPlugin.getPlugin());
             pluginsList.add(SourceMM640gPlugin.getPlugin());
@@ -215,7 +202,7 @@ public class MainApp extends Application {
             pluginsList.add(SourcePoctechPlugin.getPlugin());
             pluginsList.add(SourceTomatoPlugin.getPlugin());
             pluginsList.add(SourceEversensePlugin.getPlugin());
-            if (Config.SMSCOMMUNICATORENABLED) pluginsList.add(SmsCommunicatorPlugin.getPlugin());
+            if (!Config.NSCLIENT) pluginsList.add(SmsCommunicatorPlugin.getPlugin());
             pluginsList.add(FoodPlugin.getPlugin());
 
             pluginsList.add(WearPlugin.initPlugin(this));
@@ -244,15 +231,6 @@ public class MainApp extends Application {
                 startKeepAliveService();
             }).start();
         }
-
-        // initialize screen wake lock
-        processPreferenceChange(new EventPreferenceChange(R.string.key_keep_screen_on));
-
-        disposable.add(RxBus.INSTANCE
-                .toObservable(EventPreferenceChange.class)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(this::processPreferenceChange, FabricPrivacy::logException)
-        );
     }
 
     private void registerLocalBroadcastReceiver() {
@@ -336,21 +314,6 @@ public class MainApp extends Application {
 
     public static ConstraintChecker getConstraintChecker() {
         return sConstraintsChecker;
-    }
-
-    public void processPreferenceChange(final EventPreferenceChange ev) {
-        if (ev.isChanged(R.string.key_keep_screen_on)) {
-            boolean keepScreenOn = SP.getBoolean(R.string.key_keep_screen_on, false);
-            final PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-            if (keepScreenOn) {
-                mWakeLock = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "AndroidAPS:MainApp_processPreferenceChange");
-                if (!mWakeLock.isHeld())
-                    mWakeLock.acquire();
-            } else {
-                if (mWakeLock != null && mWakeLock.isHeld())
-                    mWakeLock.release();
-            }
-        }
     }
 
     public static ArrayList<PluginBase> getPluginsList() {
@@ -461,8 +424,6 @@ public class MainApp extends Application {
             unregisterReceiver(timeDateOrTZChangeReceiver);
         }
 
-        if (mWakeLock != null && mWakeLock.isHeld())
-            mWakeLock.release();
     }
 
     public static int dpToPx(int dp) {
