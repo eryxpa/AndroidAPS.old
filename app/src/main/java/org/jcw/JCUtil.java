@@ -22,10 +22,12 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import info.nightscout.androidaps.MainApp;
+import info.nightscout.androidaps.R;
 import info.nightscout.androidaps.data.Profile;
 import info.nightscout.androidaps.data.PumpEnactResult;
 import info.nightscout.androidaps.plugins.aps.loop.APSResult;
 import info.nightscout.androidaps.utils.DateUtil;
+import info.nightscout.androidaps.utils.SP;
 
 public class JCUtil {
 
@@ -139,8 +141,22 @@ public class JCUtil {
 
 
 
+    static public void sendTelegramSMSResponse(String mensaje)
+    {
+        sendTelegramMessage(mensaje);
+    }
+
 
     static public void sendTelegramNotification(String mensaje)
+    {
+        if (SP.getBoolean(R.string.key_notify_by_telegram, false) && !"".equals(SP.getString(R.string.key_telegram_group_url, "")))
+        {
+            sendTelegramMessage(mensaje);
+        }
+    }
+
+
+    static public void sendTelegramMessage(String mensaje)
     {
         ConnectivityManager connMgr = (ConnectivityManager) MainApp.instance().getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
@@ -154,6 +170,9 @@ public class JCUtil {
             Log.e("JCW", "Sin conexión. No podrá enviarse mensaje telegram");
         }
     }
+
+
+
 
     public static String dec(double myDouble, int decimals)
     {

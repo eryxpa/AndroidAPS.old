@@ -40,11 +40,18 @@ public class ActionCurrentMultiplier extends Action {
     public void doAction(Callback callback) {
         Double currentMulti = SafeParse.stringToDouble(currentm.getValue());
         String key = "openapsama_current_basal_safety_multiplier";
-        //Cambiamos el valor de la preferencia en AAPS
-        String msg = "JCW. Actualizo SharedPreferences de key " + key + " a valor " + currentMulti + " por AUTOMATION";
-        Log.i("JCW", msg);
-        SP.putString(key, currentMulti.toString());
-        JCUtil.sendTelegramNotification(msg);
+
+        Double valueConfigured = SP.getDouble(key, new Double(1.0));
+        //Si el multiplicador es distinto, lo configuramos
+        if (currentMulti.equals(valueConfigured) == false)
+        {
+            //Cambiamos el valor de la preferencia en AAPS
+            String msg = "JCW. Actualizo SharedPreferences de key " + key + " a valor " + currentMulti + " por AUTOMATION";
+            Log.i("JCW", msg);
+            SP.putString(key, currentMulti.toString());
+            JCUtil.sendTelegramNotification(msg);
+        }
+
     }
 
     @Override

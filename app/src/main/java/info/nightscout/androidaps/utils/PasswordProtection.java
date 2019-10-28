@@ -19,7 +19,7 @@ import info.nightscout.androidaps.R;
 public class PasswordProtection {
 
     private static long lastTimePasswordOK = 0;
-    private static long millisCachedPassword = (5*60*1000); //tras acertar la contraseña, no la pedimos durante los siguientes minutos
+    private static long millisCachedPassword = 1000*60*(SP.getLong(R.string.key_password_cache_time, (long) 0));//(5*60*1000); //tras acertar la contraseña, no la pedimos durante los siguientes minutos
 
     static public boolean isLocked(String preference) {
         final String password = SP.getString(preference, "");
@@ -32,6 +32,7 @@ public class PasswordProtection {
     static public void QueryPassword(final Context context, int stringID, String preference, final Runnable ok, final Runnable fail) {
         final String password = SP.getString(preference, "");
         boolean passwordCached = false;
+        millisCachedPassword = 1000*60*(SP.getLong(R.string.key_password_cache_time, (long) 0));//(5*60*1000); //tras acertar la contraseña, no la pedimos durante los siguientes minutos
         if ((lastTimePasswordOK + millisCachedPassword) > System.currentTimeMillis() )
         {
             //Si hace poco tiempo que hemos obtenido la contaseña correcta, no volvemos a pedirla
