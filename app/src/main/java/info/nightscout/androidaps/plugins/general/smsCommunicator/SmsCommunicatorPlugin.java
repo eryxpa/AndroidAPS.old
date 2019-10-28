@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.telephony.SmsManager;
 import android.telephony.SmsMessage;
+import android.util.Log;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jcw.JCUtil;
@@ -137,6 +138,9 @@ public class SmsCommunicatorPlugin extends PluginBase {
             case "EXTENDED":
             case "CAL":
             case "PROFILE":
+            case "CURRENT_MULTI":
+            case "DAILY_MULTI":
+            case "MAX_ABSORPTION_TIME":
                 return true;
         }
         if (messageToConfirm != null && messageToConfirm.requester.phoneNumber.equals(number))
@@ -253,6 +257,30 @@ public class SmsCommunicatorPlugin extends PluginBase {
                         sendSMS(new Sms(receivedSms.phoneNumber, R.string.smscommunicator_remotecommandnotallowed));
                     else if (splitted.length == 2)
                         processCAL(splitted, receivedSms);
+                    else
+                        sendSMS(new Sms(receivedSms.phoneNumber, R.string.wrongformat));
+                    break;
+                case "CURRENT_MULTI":
+                    if (!remoteCommandsAllowed)
+                        sendSMS(new Sms(receivedSms.phoneNumber, R.string.smscommunicator_remotecommandnotallowed));
+                    else if (splitted.length == 2)
+                        processCURRENT_MULTI(splitted, receivedSms);
+                    else
+                        sendSMS(new Sms(receivedSms.phoneNumber, R.string.wrongformat));
+                    break;
+                case "DAILY_MULTI":
+                    if (!remoteCommandsAllowed)
+                        sendSMS(new Sms(receivedSms.phoneNumber, R.string.smscommunicator_remotecommandnotallowed));
+                    else if (splitted.length == 2)
+                        processDAILY_MULTI(splitted, receivedSms);
+                    else
+                        sendSMS(new Sms(receivedSms.phoneNumber, R.string.wrongformat));
+                    break;
+                case "MAX_ABSORPTION_TIME":
+                    if (!remoteCommandsAllowed)
+                        sendSMS(new Sms(receivedSms.phoneNumber, R.string.smscommunicator_remotecommandnotallowed));
+                    else if (splitted.length == 2)
+                        processMAX_ABSORPTION_TIME(splitted, receivedSms);
                     else
                         sendSMS(new Sms(receivedSms.phoneNumber, R.string.wrongformat));
                     break;
@@ -744,6 +772,101 @@ public class SmsCommunicatorPlugin extends PluginBase {
         } else
             sendSMS(new Sms(receivedSms.phoneNumber, R.string.wrongformat));
     }
+
+
+    private void processCURRENT_MULTI(String[] splitted, Sms receivedSms) {
+        Double currentMulti = SafeParse.stringToDouble(splitted[1]);
+        if (currentMulti > 0d) {
+            String passCode = generatePasscode();
+            String reply = String.format(MainApp.gs(R.string.smscommunicator_currentmultireplywithcode), currentMulti, passCode);
+            receivedSms.processed = true;
+            messageToConfirm = new AuthRequest(this, receivedSms, reply, passCode, new SmsAction(currentMulti) {
+                @Override
+                public void run() {
+                    try {
+                        String key = "openapsama_current_basal_safety_multiplier";
+                        //Cambiamos el valor de la preferencia en AAPS
+                        String msg = "JCW. Actualizo SharedPreferences de key " + key + " a valor " + currentMulti + " por comando SMS";
+                        Log.i("JCW", msg);
+                        SP.putString(key, currentMulti.toString());
+                        JCUtil.sendTelegramNotification(msg);
+
+                        sendSMSToAllNumbers(new Sms(receivedSms.phoneNumber, R.string.smscommunicator_currentmultiset));
+                    }
+                    catch (Exception e)
+                    {
+                        sendSMS(new Sms(receivedSms.phoneNumber, R.string.smscommunicator_currentmultifailed));
+                    }
+                }
+            });
+        } else
+            sendSMS(new Sms(receivedSms.phoneNumber, R.string.wrongformat));
+    }
+
+
+    private void processDAILY_MULTI(String[] splitted, Sms receivedSms) {
+        Double dailyMulti = SafeParse.stringToDouble(splitted[1]);
+        if (dailyMulti > 0d) {
+            String passCode = generatePasscode();
+            String reply = String.format(MainApp.gs(R.string.smscommunicator_dailymultireplywithcode), dailyMulti, passCode);
+            receivedSms.processed = true;
+            messageToConfirm = new AuthRequest(this, receivedSms, reply, passCode, new SmsAction(dailyMulti) {
+                @Override
+                public void run() {
+                    try {
+                        String key = "openapsama_max_daily_safety_multiplier";
+                        //Cambiamos el valor de la preferencia en AAPS
+                        String msg = "JCW. Actualizo SharedPreferences de key " + key + " a valor " + dailyMulti + " por comando SMS";
+                        Log.i("JCW", msg);
+                        SP.putString(key, dailyMulti.toString());
+                        JCUtil.sendTelegramNotification(msg);
+
+                        sendSMSToAllNumbers(new Sms(receivedSms.phoneNumber, R.string.smscommunicator_dailymultiset));
+                    }
+                    catch (Exception e)
+                    {
+                        sendSMS(new Sms(receivedSms.phoneNumber, R.string.smscommunicator_dailymultifailed));
+                    }
+                }
+            });
+        } else
+            sendSMS(new Sms(receivedSms.phoneNumber, R.string.wrongformat));
+    }
+
+
+
+
+    private void processMAX_ABSORPTION_TIME(String[] splitted, Sms receivedSms) {
+        Double maxAbsorptionTime = SafeParse.stringToDouble(splitted[1]);
+        if (maxAbsorptionTime >= 3d) {
+            //String passCode = generatePasscode();
+            //String reply = String.format(MainApp.gs(R.string.smscommunicator_dailymultireplywithcode), dailyMulti, passCode);
+            //receivedSms.processed = true;
+            //messageToConfirm = new AuthRequest(this, receivedSms, reply, passCode, new SmsAction(dailyMulti) {
+                //@Override
+                //public void run() {
+                    //try {
+                        String key = "absorption_maxtime";
+                        //Cambiamos el valor de la preferencia en AAPS
+                        String msg = "JCW. Actualizo SharedPreferences de key " + key + " a valor " + maxAbsorptionTime + " por comando SMS";
+                        Log.i("JCW", msg);
+                        SP.putString(key, maxAbsorptionTime.toString());
+                        JCUtil.sendTelegramNotification(msg);
+
+                        //sendSMSToAllNumbers(new Sms(receivedSms.phoneNumber, R.string.smscommunicator_dailymultiset));
+                    //}
+                    //catch (Exception e)
+                    //{
+                    //    sendSMS(new Sms(receivedSms.phoneNumber, R.string.smscommunicator_dailymultifailed));
+                    //}
+                //}
+            //});
+        } else
+            sendSMS(new Sms(receivedSms.phoneNumber, R.string.wrongformat));
+    }
+
+
+
 
     public boolean sendNotificationToAllNumbers(String text) {
         boolean result = true;

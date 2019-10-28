@@ -292,6 +292,8 @@
     <string name="smscommunicator_allowednumbers_summary">+XXXXXXXXXX;+YYYYYYYYYY</string>
     <string name="smscommunicator_bolusreplywithcode">To deliver bolus %1$.2fU reply with code %2$s</string>
     <string name="smscommunicator_calibrationreplywithcode">To send calibration %1$.2f reply with code %2$s</string>
+    <string name="smscommunicator_currentmultireplywithcode">To set CURRENT multiplier %1$.2f reply with code %2$s</string>
+    <string name="smscommunicator_dailymultireplywithcode">To set DAILY multiplier %1$.2f reply with code %2$s</string>
     <string name="smscommunicator_bolusfailed">Bolus failed</string>
     <string name="bolusdelivered">Bolus %1$.2fU delivered successfully</string>
     <string name="bolusrequested">Going to deliver %1$.2fU</string>
@@ -502,6 +504,10 @@
     <string name="calibrationsent">Calibration sent to xDrip</string>
     <string name="smscommunicator_calibrationsent">Calibration sent. Receiving must be enabled in xDrip.</string>
     <string name="smscommunicator_calibrationfailed">xDrip is not receiving calibrations</string>
+    <string name="smscommunicator_currentmultiset">Current multiplier has been set correctly</string>
+    <string name="smscommunicator_currentmultifailed">Failed to set current multiplier</string>
+    <string name="smscommunicator_dailymultiset">DAILY multiplier has been set correctly</string>
+    <string name="smscommunicator_dailymultifailed">Failed to set DAILY multiplier</string>
     <string name="pumpsuspended">Pump suspended</string>
     <string name="gettingpumpstatus">Getting pump status</string>
     <string name="settingtempbasal">Setting temp basal</string>
@@ -1582,6 +1588,11 @@
     <string name="sendsmsactionlabel">Send SMS: %1$s</string>
     <string name="sendsmsactiondescription">Send SMS to all numbers in preferences</string>
     <string name="sendsmsactiontext">Send SMS with text</string>
+
+    <string name="changecurrentactionlabel">Current multiplier</string>
+    <string name="changecurrentactiondescription">Set current multiplier value</string>
+    <string name="changecurrentactionvalue">Current multiplier value</string>
+
 
 
     <string name="insulinFromCob"><![CDATA[COB vs IOB: <font color=\'%1$s\'>%2$+.2fU</font>]]></string>
