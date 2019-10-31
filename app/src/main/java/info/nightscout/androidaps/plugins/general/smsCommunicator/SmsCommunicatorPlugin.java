@@ -890,7 +890,6 @@ public class SmsCommunicatorPlugin extends PluginBase {
             if (L.isEnabled(L.SMS))
                 log.debug("Sending SMS to " + sms.phoneNumber + ": " + sms.text);
 
-            //FIXME: puestos a fuego los teléfonos (parte). Configurar en preferences?
             if (SP.getBoolean(R.string.key_send_telegrams_instead_of_sms, false) && sms.phoneNumber != null)
             {
                 //smsManager.sendTextMessage(sms.phoneNumber, null, sms.text, null, null);
