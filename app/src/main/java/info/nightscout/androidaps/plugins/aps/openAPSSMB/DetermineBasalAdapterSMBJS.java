@@ -233,7 +233,8 @@ public class DetermineBasalAdapterSMBJS {
         mProfile.put("target_bg", targetBg);
         mProfile.put("carb_ratio", profile.getIc());
         mProfile.put("sens", Profile.toMgdl(profile.getIsf(), units));
-        mProfile.put("max_daily_safety_multiplier", SP.getInt(R.string.key_openapsama_max_daily_safety_multiplier, 3));
+        //mProfile.put("max_daily_safety_multiplier", SP.getInt(R.string.key_openapsama_max_daily_safety_multiplier, 3));
+        mProfile.put("max_daily_safety_multiplier", SP.getDouble(R.string.key_openapsama_max_daily_safety_multiplier, 3d));
         mProfile.put("current_basal_safety_multiplier", SP.getDouble(R.string.key_openapsama_current_basal_safety_multiplier, 4d));
 
         // TODO AS-FIX
