@@ -1,5 +1,6 @@
 package info.nightscout.androidaps.queue.commands;
 
+import org.jcw.JCUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +42,13 @@ public class CommandSMBBolus extends Command {
             r = new PumpEnactResult().enacted(false).success(false).comment("SMB requsted but still in 3 min interval");
         } else if (detailedBolusInfo.deliverAt != 0 && detailedBolusInfo.deliverAt + T.mins(1).msecs() > System.currentTimeMillis()) {
             r = ConfigBuilderPlugin.getPlugin().getActivePump().deliverTreatment(detailedBolusInfo);
+
+            //PRINCIPIO adaptación para informar desde aquí de los SMB
+            String command = "CommandTempBasalAbsolute.execute";
+            JCUtil.infoSMBTelegram(command, r, detailedBolusInfo);
+            //FIN adaptación para informar desde aquí de los SMB
+
+
         } else {
             r = new PumpEnactResult().enacted(false).success(false).comment("SMB request too old");
             if (L.isEnabled(L.PUMPQUEUE))

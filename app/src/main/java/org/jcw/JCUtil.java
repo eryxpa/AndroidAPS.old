@@ -23,6 +23,7 @@ import java.util.Date;
 
 import info.nightscout.androidaps.MainApp;
 import info.nightscout.androidaps.R;
+import info.nightscout.androidaps.data.DetailedBolusInfo;
 import info.nightscout.androidaps.data.Profile;
 import info.nightscout.androidaps.data.PumpEnactResult;
 import info.nightscout.androidaps.plugins.aps.loop.APSResult;
@@ -412,4 +413,38 @@ public class JCUtil {
         return telegram_group_URL;
     }
 
+    public static void infoSMBTelegram(String command, PumpEnactResult r, DetailedBolusInfo detailedBolusInfo) {
+        try
+        {
+            Log.i("JCW", "adaptación JCW. " + command);
+            //informar de basal temporal que se desea aplicar. Aquí aún no sabemos si se aplicará correctamente
+
+            if (r!=null)
+            {
+                if (r.enacted==true)
+                {
+                    String extraMsg = "." + " Success: " + r.success + " Enacted: " + r.enacted + " - " + r.toString()+ "\n Command: " + command;
+                    String mensaje = "";
+                    mensaje = "SMB " + dec(detailedBolusInfo.insulin,2) + " isSMB= " + detailedBolusInfo.isSMB + " BolusCalc" + detailedBolusInfo.boluscalc.toString(2);
+
+                    JCUtil.sendTelegramNotification(mensaje);
+                }
+                else
+                {
+                    JCUtil.sendTelegramNotification("Problema con SMB. NO ENACTED: SMB " + dec(detailedBolusInfo.insulin,2) + " isSMB= " + detailedBolusInfo.isSMB + " BolusCalc" + detailedBolusInfo.boluscalc.toString(2));
+                }
+            }
+            else
+            {
+                JCUtil.sendTelegramNotification("PumpEnactResult nulo: SMB");
+                Log.i("JCW", "adaptación JCW. " + command + ". r es null");
+            }
+        }
+        catch (Throwable t)
+        {
+            Log.e("JCW", "problema al querer notificar SMB en " + command + ". " + t.getLocalizedMessage());
+            t.printStackTrace();
+        }
+
+    }
 }
