@@ -38,6 +38,8 @@ public class JCUtil {
     private static File externalStorageFile = null;
     private static String telegram_group_URL = "";
 
+    private static Profile lastProfileNotified = null;
+
 
     public static Double getCustom_current_basal_safety_multiplier(double defaultValue)
     {
@@ -232,31 +234,30 @@ public class JCUtil {
     }
 
     public static void infoProfileSetTelegram(Profile profile, PumpEnactResult r, String command) {
-        try
-        {
+        try {
             Log.i("JCW", "adaptación JCW. " + command);
-            //informar de basal temporal que se desea aplicar. Aquí aún no sabemos si se aplicará correctamente
+            //Informa de nuevo perfil
 
-            if (r!=null)
+            //solo notificamos por telegram si el perfil es distinto al último notificado, para que no se repita la notificación constantemente
+            if (profile != null && !profile.equals(lastProfileNotified))
             {
-                if (r.enacted==true)
-                {
-                    String extraMsg = "." + " Success: " + r.success + " Enacted: " + r.enacted + " - " + r.toString()+ "\n Command: " + command;
-                    String mensaje = "";
+                if (r != null) {
+                    if (r.enacted == true) {
+                        String extraMsg = "." + " Success: " + r.success + " Enacted: " + r.enacted + " - " + r.toString() + "\n Command: " + command;
+                        String mensaje = "";
 
-                    mensaje = "CAMBIO de PERFIL realizado. "+dec(profile.baseBasalSum(),2)+"u/dia al "+profile.getPercentage()+"% ("+dec((profile.baseBasalSum()/100*profile.getPercentage()),2)+") \n\nPerfil: \n" + profile.toString(2);
-                    JCUtil.sendTelegramNotification(mensaje);
-                }
-                else
-                {
-                    JCUtil.sendTelegramNotification("NO se ha cambiado de perfil. success: " + r.success + " enacted: " + r.enacted + " command: " + command);
+                        lastProfileNotified = profile;
+                        mensaje = "CAMBIO de PERFIL realizado. " + dec(profile.baseBasalSum(), 2) + "u/dia al " + profile.getPercentage() + "% (" + dec((profile.baseBasalSum() / 100 * profile.getPercentage()), 2) + ") \n\nPerfil: \n" + profile.toString(2);
+                        JCUtil.sendTelegramNotification(mensaje);
+                    } else {
+                        JCUtil.sendTelegramNotification("NO se ha cambiado de perfil. success: " + r.success + " enacted: " + r.enacted + " command: " + command);
+                    }
+                } else {
+                    JCUtil.sendTelegramNotification("PumpEnactResult nulo: Cambio de perfil pero enactResult es nulo. success: " + r.success + " enacted: " + r.enacted + " command: " + command);
+                    Log.i("JCW", "adaptación JCW. " + command + ". r es null");
                 }
             }
-            else
-            {
-                JCUtil.sendTelegramNotification("PumpEnactResult nulo: Cambio de perfil pero enactResult es nulo. success: " + r.success + " enacted: " + r.enacted + " command: " + command);
-                Log.i("JCW", "adaptación JCW. " + command + ". r es null");
-            }
+
         }
         catch (Throwable t)
         {

@@ -42,12 +42,11 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 
-import info.nightscout.androidaps.activities.AgreementActivity;
 import info.nightscout.androidaps.activities.HistoryBrowseActivity;
 import info.nightscout.androidaps.activities.NoSplashAppCompatActivity;
 import info.nightscout.androidaps.activities.PreferencesActivity;
 import info.nightscout.androidaps.activities.SingleFragmentActivity;
-import info.nightscout.androidaps.data.Profile;
+import info.nightscout.androidaps.activities.StatsActivity;
 import info.nightscout.androidaps.events.EventAppExit;
 import info.nightscout.androidaps.events.EventPreferenceChange;
 import info.nightscout.androidaps.events.EventRebuildTabs;
@@ -56,7 +55,6 @@ import info.nightscout.androidaps.interfaces.PluginType;
 import info.nightscout.androidaps.logging.L;
 import info.nightscout.androidaps.plugins.aps.loop.LoopPlugin;
 import info.nightscout.androidaps.plugins.bus.RxBus;
-import info.nightscout.androidaps.plugins.configBuilder.ProfileFunctions;
 import info.nightscout.androidaps.plugins.constraints.versionChecker.VersionCheckerUtilsKt;
 import info.nightscout.androidaps.plugins.general.nsclient.data.NSSettingsStatus;
 import info.nightscout.androidaps.setupwizard.SetupWizardActivity;
@@ -69,6 +67,8 @@ import info.nightscout.androidaps.utils.PasswordProtection;
 import info.nightscout.androidaps.utils.SP;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+
+import static info.nightscout.androidaps.utils.EspressoTestHelperKt.isRunningRealPumpTest;
 
 public class MainActivity extends NoSplashAppCompatActivity {
     private static Logger log = LoggerFactory.getLogger(L.CORE);
@@ -108,8 +108,6 @@ public class MainActivity extends NoSplashAppCompatActivity {
 
         // initialize screen wake lock
         processPreferenceChange(new EventPreferenceChange(R.string.key_keep_screen_on));
-
-        doMigrations();
 
         final ViewPager viewPager = findViewById(R.id.pager);
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
@@ -156,11 +154,9 @@ public class MainActivity extends NoSplashAppCompatActivity {
                 .subscribe(this::processPreferenceChange, FabricPrivacy::logException)
         );
 
-        if (!SP.getBoolean(R.string.key_setupwizard_processed, false)) {
+        if (!SP.getBoolean(R.string.key_setupwizard_processed, false) && !isRunningRealPumpTest()) {
             Intent intent = new Intent(this, SetupWizardActivity.class);
             startActivity(intent);
-        } else {
-            checkEula();
         }
 
         AndroidPermission.notifyForStoragePermission(this);
@@ -168,6 +164,7 @@ public class MainActivity extends NoSplashAppCompatActivity {
         if (Config.PUMPDRIVERS) {
             AndroidPermission.notifyForLocationPermissions(this);
             AndroidPermission.notifyForSMSPermissions(this);
+            AndroidPermission.notifyForSystemWindowPermissions(this);
         }
 
         firstTime = false;
@@ -254,49 +251,6 @@ public class MainActivity extends NoSplashAppCompatActivity {
         }
     }
 
-    private void checkEula() {
-        //SP.removeBoolean(R.string.key_i_understand);
-        boolean IUnderstand = SP.getBoolean(R.string.key_i_understand, false);
-        if (!IUnderstand) {
-            Intent intent = new Intent(getApplicationContext(), AgreementActivity.class);
-            startActivity(intent);
-            finish();
-        }
-    }
-
-    private void doMigrations() {
-
-        checkUpgradeToProfileTarget();
-
-        // guarantee that the unreachable threshold is at least 30 and of type String
-        // Added in 1.57 at 21.01.2018
-        int unreachable_threshold = SP.getInt(R.string.key_pump_unreachable_threshold, 30);
-        SP.remove(R.string.key_pump_unreachable_threshold);
-        if (unreachable_threshold < 30) unreachable_threshold = 30;
-        SP.putString(R.string.key_pump_unreachable_threshold, Integer.toString(unreachable_threshold));
-    }
-
-
-    private void checkUpgradeToProfileTarget() { // TODO: can be removed in the future
-        boolean oldKeyExists = SP.contains("openapsma_min_bg");
-        if (oldKeyExists) {
-            Profile profile = ProfileFunctions.getInstance().getProfile();
-            String oldRange = SP.getDouble("openapsma_min_bg", 0d) + " - " + SP.getDouble("openapsma_max_bg", 0d);
-            String newRange = "";
-            if (profile != null) {
-                newRange = profile.getTargetLow() + " - " + profile.getTargetHigh();
-            }
-            String message = "Target range is changed in current version.\n\nIt's not taken from preferences but from profile.\n\n!!! REVIEW YOUR SETTINGS !!!";
-            message += "\n\nOld settings: " + oldRange;
-            message += "\nProfile settings: " + newRange;
-            OKDialog.show(this, "Target range change", message, () -> {
-                SP.remove("openapsma_min_bg");
-                SP.remove("openapsma_max_bg");
-                SP.remove("openapsma_target_bg");
-            });
-        }
-    }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -305,15 +259,13 @@ public class MainActivity extends NoSplashAppCompatActivity {
                 switch (requestCode) {
                     case AndroidPermission.CASE_STORAGE:
                         //show dialog after permission is granted
-                        AlertDialog.Builder alert = new AlertDialog.Builder(this);
-                        alert.setMessage(R.string.alert_dialog_storage_permission_text);
-                        alert.setPositiveButton(R.string.ok, null);
-                        alert.show();
+                        OKDialog.show(this, "", MainApp.gs(R.string.alert_dialog_storage_permission_text));
                         break;
                     case AndroidPermission.CASE_LOCATION:
                     case AndroidPermission.CASE_SMS:
                     case AndroidPermission.CASE_BATTERY:
                     case AndroidPermission.CASE_PHONE_STATE:
+                    case AndroidPermission.CASE_SYSTEM_WINDOW:
                         break;
                 }
             }
@@ -382,9 +334,7 @@ public class MainActivity extends NoSplashAppCompatActivity {
                 return true;
             case R.id.nav_exit:
                 log.debug("Exiting");
-                MainApp.instance().stopKeepAliveService();
                 RxBus.INSTANCE.send(new EventAppExit());
-                MainApp.closeDbHelper();
                 finish();
                 System.runFinalization();
                 System.exit(0);
@@ -397,6 +347,14 @@ public class MainActivity extends NoSplashAppCompatActivity {
                     i.putExtra("id", plugin.getPreferencesId());
                     startActivity(i);
                 }, null);
+                return true;
+/*
+            case R.id.nav_survey:
+                startActivity(new Intent(this, SurveyActivity.class));
+                return true;
+*/
+            case R.id.nav_stats:
+                startActivity(new Intent(this, StatsActivity.class));
                 return true;
         }
         return actionBarDrawerToggle.onOptionsItemSelected(item);
