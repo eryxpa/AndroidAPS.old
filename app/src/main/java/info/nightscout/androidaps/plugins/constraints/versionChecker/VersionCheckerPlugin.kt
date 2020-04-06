@@ -82,7 +82,7 @@ object VersionCheckerPlugin : PluginBase(PluginDescription()
         return now > SP.getLong(R.string.key_last_time_this_version_detected, 0) + gracePeriod
     }
 
-    private val WARN_EVERY = TimeUnit.DAYS.toMillis(1)
+    private val WARN_EVERY = TimeUnit.DAYS.toMillis(7)
 
 }
 
