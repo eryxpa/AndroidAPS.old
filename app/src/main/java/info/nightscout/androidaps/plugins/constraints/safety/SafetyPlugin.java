@@ -76,7 +76,11 @@ public class SafetyPlugin extends PluginBase implements ConstraintsInterface {
         }
         PumpInterface pump = ConfigBuilderPlugin.getPlugin().getActivePump();
         if (pump != null && !pump.isFakingTempsByExtendedBoluses() && TreatmentsPlugin.getPlugin().isInHistoryExtendedBoluslInProgress()) {
-            value.set(false, MainApp.gs(R.string.closed_loop_disabled_with_eb), this);
+            //value.set(false, MainApp.gs(R.string.closed_loop_disabled_with_eb), this);
+            if (value.value()) {
+                Notification n = new Notification(Notification.TOAST_ALARM, MainApp.gs(R.string.closed_loop_disabled_with_eb), Notification.NORMAL);
+                RxBus.INSTANCE.send(new EventNewNotification(n));
+            }
         }
         return value;
     }
