@@ -58,6 +58,7 @@ import info.nightscout.androidaps.plugins.general.nsclient.NSUpload;
 import info.nightscout.androidaps.plugins.general.overview.OverviewPlugin;
 import info.nightscout.androidaps.plugins.general.persistentNotification.PersistentNotificationPlugin;
 import info.nightscout.androidaps.plugins.general.smsCommunicator.SmsCommunicatorPlugin;
+import info.nightscout.androidaps.plugins.general.tidepool.TidepoolPlugin;
 import info.nightscout.androidaps.plugins.general.wear.WearPlugin;
 import info.nightscout.androidaps.plugins.general.xdripStatusline.StatuslinePlugin;
 import info.nightscout.androidaps.plugins.insulin.InsulinOrefFreePeakPlugin;
@@ -226,6 +227,7 @@ public class MainApp extends Application {
             pluginsList.add(PersistentNotificationPlugin.getPlugin());
             pluginsList.add(NSClientPlugin.getPlugin());
 //            if (engineeringMode) pluginsList.add(TidepoolPlugin.INSTANCE);
+            pluginsList.add(TidepoolPlugin.INSTANCE);
             pluginsList.add(MaintenancePlugin.initPlugin(this));
             pluginsList.add(AutomationPlugin.INSTANCE);
 
